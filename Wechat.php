@@ -12,6 +12,7 @@ use yii\base\InvalidConfigException;
  * 微信公众号API类
  * 相关文档请参考 http://mp.weixin.qq.com/wiki 微信公众平台开发者文档
  * @package yii\wechat\components
+ * @version 1.0.0alpha
  */
 class Wechat extends Component
 {
@@ -19,27 +20,39 @@ class Wechat extends Component
     /**
      * 微信接口基本地址
      */
-    const WECHAT_BASE_URL = 'https://api.weixin.qq.com/cgi-bin';
+    const WECHAT_BASE_URL = 'https://api.weixin.qq.com';
     /**
      * access token获取
      */
-    const WECHAT_ACCESS_TOKEN_URL = '/token?';
+    const WECHAT_ACCESS_TOKEN_URL = '/cgi-bin/token?';
+    /**
+     * 创建菜单
+     */
+    const WECHAT_MENU_CREATE_URL = '/cgi-bin/menu/create?';
+    /**
+     * 获取菜单
+     */
+    const WECHAT_MENU_GET_URL = '/cgi-bin/menu/get?';
+    /**
+     * 发送客服消息
+     */
+    const WECHAT_CUSTOM_MESSAGE_SEND_URL = '/cgi-bin/message/custom/send?';
     /**
      * 消息上传
      */
-    const WECHAT_ARTICLES_UPLOAD_URL = '/media/uploadnews?';
+    const WECHAT_ARTICLES_UPLOAD_URL = '/cgi-bin/media/uploadnews?';
     /**
      * 消息发送
      */
-    const WECHAT_ARTICLES_SEND_URL = '/message/mass/sendall?';
+    const WECHAT_ARTICLES_SEND_URL = '/cgi-bin/message/mass/sendall?';
     /**
      * 删除群发
      */
-    const WECHAT_ARTICLES_SEND_CANCEL_URL = '/message/mass/delete?';
+    const WECHAT_ARTICLES_SEND_CANCEL_URL = '/cgi-bin/message/mass/delete?';
     /**
      * video消息的上传
      */
-    const WECHAT_MEDIA_VIDEO_UPLOAD_URL = '/media/uploadvideo?';
+    const WECHAT_MEDIA_VIDEO_UPLOAD_URL = '/cgi-bin/media/uploadvideo?';
     /**
      * 媒体文件上传
      */
@@ -51,43 +64,43 @@ class Wechat extends Component
     /**
      *  分组创建
      */
-    const WECHAT_CREATE_GROUP_URL = '/groups/create?';
+    const WECHAT_CREATE_GROUP_URL = '/cgi-bin/groups/create?';
     /**
      *  分组列表获取
      */
-    const WECHAT_GROUP_LIST_URL = '/groups/get?';
+    const WECHAT_GROUP_GET_URL = '/cgi-bin/groups/get?';
     /**
      * 修改分组名
      */
-    const WECHAT_UPDATE_GROUP_NAME_URL = '/groups/update?';
+    const WECHAT_UPDATE_GROUP_NAME_URL = '/cgi-bin/groups/update?';
     /**
      *  获取关注者所在分组ID
      */
-    const WECHAT_GET_GROUP_ID_URL = '/groups/getid?';
+    const WECHAT_GET_GROUP_ID_URL = '/cgi-bin/groups/getid?';
     /**
      * 修改关注者所在分组
      */
-    const WECHAT_MEMBER_GROUP_UPDATE_URL = '/groups/members/update?';
+    const WECHAT_MEMBER_GROUP_UPDATE_URL = '/cgi-bin/groups/members/update?';
     /**
      * 修改关注者备注
      */
-    const WECHAT_MEMBER_REMARK_UPDATE_URL = '/user/info/updateremark?';
+    const WECHAT_MEMBER_REMARK_UPDATE_URL = '/cgi-bin/user/info/updateremark?';
     /**
      * 关注者基本信息
      */
-    const WECHAT_MEMBER_INFO_URL = '/user/info?';
+    const WECHAT_MEMBER_INFO_URL = '/cgi-bin/user/info?';
     /**
      * 关注者列表
      */
-    const WECHAT_MEMBER_LIST_URL = '/user/get?';
+    const WECHAT_MEMBER_GET_URL = '/cgi-bin/user/get?';
     /**
      * 获取客服聊天记录
      */
-    const WECHAT_CUSTOMER_SERVICE_RECORD_LIST_URL = '/customservice/getrecord?';
+    const WECHAT_CUSTOMER_SERVICE_RECORD_GET_URL = '/cgi-bin/customservice/getrecord?';
     /**
      * QR二维码创建
      */
-    const WECHAT_CREATE_QRCODE_URL = '/qrcode/create?';
+    const WECHAT_CREATE_QRCODE_URL = '/cgi-bin/qrcode/create?';
     /**
      * QR二维码展示
      */
@@ -95,7 +108,7 @@ class Wechat extends Component
     /**
      * 短连接
      */
-    const WECHAT_SHORT_URL_URL = '/shorturl?';
+    const WECHAT_SHORT_URL_URL = '/cgi-bin/shorturl?';
     /**
      * @var string 公众号appId
      */
@@ -124,14 +137,14 @@ class Wechat extends Component
      * @var array
      */
     public $operCode = [
-        1000 => '创建未接入会话',
-        1001 => '接入会话',
-        1002 => '主动发起会话',
-        1004 => '关闭会话',
-        1005 => '抢接会话',
-        2001 => '公众号收到消息',
-        2002 => '客服发送消息',
-        2003 => '客服收到消息',
+        '1000' => '创建未接入会话',
+        '1001' => '接入会话',
+        '1002' => '主动发起会话',
+        '1004' => '关闭会话',
+        '1005' => '抢接会话',
+        '2001' => '公众号收到消息',
+        '2002' => '客服发送消息',
+        '2003' => '客服收到消息',
     ];
     /**
      * 回调错误代码
@@ -139,88 +152,88 @@ class Wechat extends Component
      * @var array
      */
     public $errorCode = [
-        -1    => '系统繁忙',
-        0     => '请求成功',
-        40001 => '获取access_token时appsecret错误，或者access_token无效',
-        40002 => '不合法的凭证类型',
-        40003 => '不合法的openid',
-        40004 => '不合法的媒体文件类型',
-        40005 => '不合法的文件类型',
-        40006 => '不合法的文件大小',
-        40007 => '不合法的媒体文件id',
-        40008 => '不合法的消息类型',
-        40009 => '不合法的图片文件大小',
-        40010 => '不合法的语音文件大小',
-        40011 => '不合法的视频文件大小',
-        40012 => '不合法的缩略图文件大小',
-        40013 => '不合法的appid',
-        40014 => '不合法的access_token',
-        40015 => '不合法的菜单类型',
-        40016 => '不合法的按钮个数',
-        40017 => '不合法的按钮个数',
-        40018 => '不合法的按钮名字长度',
-        40019 => '不合法的按钮KEY长度',
-        40020 => '不合法的按钮URL长度',
-        40021 => '不合法的菜单版本号',
-        40022 => '不合法的子菜单级数',
-        40023 => '不合法的子菜单按钮个数',
-        40024 => '不合法的子菜单按钮类型',
-        40025 => '不合法的子菜单按钮名字长度',
-        40026 => '不合法的子菜单按钮KEY长度',
-        40027 => '不合法的子菜单按钮URL长度',
-        40028 => '不合法的自定义菜单使用用户',
-        40029 => '不合法的oauth_code',
-        40030 => '不合法的refresh_token',
-        40031 => '不合法的openid列表',
-        40032 => '不合法的openid列表长度',
-        40033 => '不合法的请求字符，不能包含\uxxxx格式的字符',
-        40035 => '不合法的参数',
-        40038 => '不合法的请求格式',
-        40039 => '不合法的URL长度',
-        40050 => '不合法的分组id',
-        40051 => '分组名字不合法',
-        41001 => '缺少access_token参数',
-        41002 => '缺少appid参数',
-        41003 => '缺少refresh_token参数',
-        41004 => '缺少secret参数',
-        41005 => '缺少多媒体文件数据',
-        41006 => '缺少media_id参数',
-        41007 => '缺少子菜单数据',
-        41008 => '缺少oauth code',
-        41009 => '缺少openid',
-        42001 => 'access_token超时',
-        42002 => 'refresh_token超时',
-        42003 => 'oauth_code超时',
-        43001 => '需要GET请求',
-        43002 => '需要POST请求',
-        43003 => '需要HTTPS请求',
-        43004 => '需要接收者关注',
-        43005 => '需要好友关系',
-        44001 => '多媒体文件为空',
-        44002 => 'POST的数据包为空',
-        44003 => '图文消息内容为空',
-        44004 => '文本消息内容为空',
-        45001 => '多媒体文件大小超过限制',
-        45002 => '消息内容超过限制',
-        45003 => '标题字段超过限制',
-        45004 => '描述字段超过限制',
-        45005 => '链接字段超过限制',
-        45006 => '图片链接字段超过限制',
-        45007 => '语音播放时间超过限制',
-        45008 => '图文消息超过限制',
-        45009 => '接口调用超过限制',
-        45010 => '创建菜单个数超过限制',
-        45015 => '回复时间超过限制',
-        45016 => '系统分组，不允许修改',
-        45017 => '分组名字过长',
-        45018 => '分组数量超过上限',
-        46001 => '不存在媒体数据',
-        46002 => '不存在的菜单版本',
-        46003 => '不存在的菜单数据',
-        46004 => '不存在的用户',
-        47001 => '解析JSON/XML内容错误',
-        48001 => 'API功能未授权',
-        50001 => '用户未授权该api',
+        '-1' => '系统繁忙',
+        '0' => '请求成功',
+        '40001' => '获取access_token时AppSecret错误，或者access_token无效',
+        '40002' => '不合法的凭证类型',
+        '40003' => '不合法的OpenID',
+        '40004' => '不合法的媒体文件类型',
+        '40005' => '不合法的文件类型',
+        '40006' => '不合法的文件大小',
+        '40007' => '不合法的媒体文件id',
+        '40008' => '不合法的消息类型',
+        '40009' => '不合法的图片文件大小',
+        '40010' => '不合法的语音文件大小',
+        '40011' => '不合法的视频文件大小',
+        '40012' => '不合法的缩略图文件大小',
+        '40013' => '不合法的APPID',
+        '40014' => '不合法的access_token',
+        '40015' => '不合法的菜单类型',
+        '40016' => '不合法的按钮个数',
+        '40017' => '不合法的按钮个数',
+        '40018' => '不合法的按钮名字长度',
+        '40019' => '不合法的按钮KEY长度',
+        '40020' => '不合法的按钮URL长度',
+        '40021' => '不合法的菜单版本号',
+        '40022' => '不合法的子菜单级数',
+        '40023' => '不合法的子菜单按钮个数',
+        '40024' => '不合法的子菜单按钮类型',
+        '40025' => '不合法的子菜单按钮名字长度',
+        '40026' => '不合法的子菜单按钮KEY长度',
+        '40027' => '不合法的子菜单按钮URL长度',
+        '40028' => '不合法的自定义菜单使用用户',
+        '40029' => '不合法的oauth_code',
+        '40030' => '不合法的refresh_token',
+        '40031' => '不合法的openid列表',
+        '40032' => '不合法的openid列表长度',
+        '40033' => '不合法的请求字符，不能包含\uxxxx格式的字符',
+        '40035' => '不合法的参数',
+        '40038' => '不合法的请求格式',
+        '40039' => '不合法的URL长度',
+        '40050' => '不合法的分组id',
+        '40051' => '分组名字不合法',
+        '41001' => '缺少access_token参数',
+        '41002' => '缺少appid参数',
+        '41003' => '缺少refresh_token参数',
+        '41004' => '缺少secret参数',
+        '41005' => '缺少多媒体文件数据',
+        '41006' => '缺少media_id参数',
+        '41007' => '缺少子菜单数据',
+        '41008' => '缺少oauth code',
+        '41009' => '缺少openid',
+        '42001' => 'access_token超时',
+        '42002' => 'refresh_token超时',
+        '42003' => 'oauth_code超时',
+        '43001' => '需要GET请求',
+        '43002' => '需要POST请求',
+        '43003' => '需要HTTPS请求',
+        '43004' => '需要接收者关注',
+        '43005' => '需要好友关系',
+        '44001' => '多媒体文件为空',
+        '44002' => 'POST的数据包为空',
+        '44003' => '图文消息内容为空',
+        '44004' => '文本消息内容为空',
+        '45001' => '多媒体文件大小超过限制',
+        '45002' => '消息内容超过限制',
+        '45003' => '标题字段超过限制',
+        '45004' => '描述字段超过限制',
+        '45005' => '链接字段超过限制',
+        '45006' => '图片链接字段超过限制',
+        '45007' => '语音播放时间超过限制',
+        '45008' => '图文消息超过限制',
+        '45009' => '接口调用超过限制',
+        '45010' => '创建菜单个数超过限制',
+        '45015' => '回复时间超过限制',
+        '45016' => '系统分组，不允许修改',
+        '45017' => '分组名字过长',
+        '45018' => '分组数量超过上限',
+        '46001' => '不存在媒体数据',
+        '46002' => '不存在的菜单版本',
+        '46003' => '不存在的菜单数据',
+        '46004' => '不存在的用户',
+        '47001' => '解析JSON/XML内容错误',
+        '48001' => 'api功能未授权',
+        '50001' => '用户未授权该api',
     ];
     /**
      * @var array
@@ -285,6 +298,170 @@ class Wechat extends Component
     }
 
     /**
+     * 创建菜单
+     * @param array $buttons
+     * @return bool
+     */
+    public function createMenu(array $buttons)
+    {
+        $result = $this->httpRaw(self::WECHAT_MENU_CREATE_URL, json_encode([
+            'button' => $buttons
+        ]));
+        return isset($result['errmsg']) && $result['errmsg'] == 'ok';
+    }
+
+    /**
+     * 获取菜单列表
+     * @param $bunttons
+     * @return bool
+     */
+    public function getMenuList($buttons)
+    {
+        $result = $this->httpRaw(self::WECHAT_MENU_GET_URL, json_encode([
+            'button' => $buttons
+        ]));
+        return isset($result['menu']['button']) ? $result['menu']['button'] : fasle;
+    }
+
+    /**
+     * 删除菜单
+     * @return bool
+     */
+    public function deleteMenu()
+    {
+        $result = $this->httpGet(self::WECHAT_MENU_DELETE_URL . 'access_token=' . $this->getAccessToken());
+        return isset($result['errmsg']) && $result['errmsg'] == 'ok';
+    }
+
+    /**
+     * 发送文本客服信息
+     * @param $openId
+     * @param $content
+     * @return bool
+     */
+    public function sendText($openId, $content)
+    {
+        return $this->send([
+            'touser' => $openId,
+            'msgtype' => 'text',
+            'text' => [
+                'content' => $content
+            ]
+        ]);
+    }
+
+    /**
+     * 发送图片客服消息
+     * @param $openId
+     * @param $mediaId
+     * @return bool
+     */
+    public function sendImage($openId, $mediaId)
+    {
+        return $this->send([
+            'touser' => $openId,
+            'msgtype' => 'voice',
+            'voice' => [
+                'media_id' => $mediaId
+            ]
+        ]);
+    }
+
+    /**
+     * 发送声音客服消息
+     * @param $openId
+     * @param $mediaId
+     * @return bool
+     */
+    public function sendVoice($openId, $mediaId)
+    {
+        return $this->send([
+            'touser' => $openId,
+            'msgtype' => 'voice',
+            'voice' => [
+                'media_id' => $mediaId
+            ]
+        ]);
+    }
+
+    /**
+     * 发送视频客服信息
+     * @param $openId
+     * @param $mediaId
+     * @param $thumbMediaId
+     * @param null $title
+     * @param null $description
+     * @return bool
+     */
+    public function sendVideo($openId, $mediaId, $thumbMediaId, $title = null, $description = null)
+    {
+        return $this->send([
+            'touser' => $openId,
+            'msgtype' => 'video',
+            'video' => [
+                'media_id' => $mediaId,
+                'thumb_media_id' => $thumbMediaId,
+                'title' => $title,
+                'description' => $description
+            ]
+        ]);
+    }
+
+    /**
+     * 发送音乐客服消息
+     * @param $openId
+     * @param $thumbMediaId
+     * @param $musicUrl
+     * @param $hqMusicUrl
+     * @param null $title
+     * @param null $description
+     * @return bool
+     */
+    public function sendMusic($openId, $thumbMediaId, $musicUrl, $hqMusicUrl, $title = null, $description = null)
+    {
+        return $this->send([
+            'touser' => $openId,
+            'msgtype' => 'music',
+            'music' => [
+                'thumb_media_id' => $thumbMediaId,
+                'musicurl' => $musicUrl,
+                'hqMusicUrl' => $hqMusicUrl,
+                'title' => $title,
+                'description' => $description
+            ]
+        ]);
+    }
+
+    /**
+     * 发送图文客服消息
+     * @param $openId
+     * @param array $articles
+     * @return bool
+     */
+    public function sendNews($openId, array $articles)
+    {
+        return $this->send([
+            'touser' => $openId,
+            'msgtype' => 'news',
+            'news' => [
+                'articles' => $articles
+            ]
+        ]);
+    }
+
+    /**
+     * 发送客服消息
+     * @param array $data
+     * @return bool
+     */
+    protected function send(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_ARTICLES_SEND_URL . 'access_token=' . $this->getAccessToken(),
+            json_encode($data, JSON_UNESCAPED_UNICODE));
+        return isset($result['errmsg']) && $result['errmsg'] == 'ok';
+    }
+
+    /**
      * 图文消息上传
      * @param array $articles
      * @return array|bool
@@ -299,41 +476,17 @@ class Wechat extends Component
     }
 
     /**
-     * 推送消息给关注者
-     * @param array $openId
-     * @param $content
-     * @param string $type
-     * @return array|bool
-     */
-    public function sendArticlesToMembers(array $openId, $content, $type = 'text')
-    {
-        return $this->sendArticles([
-            'touser' => $openId
-        ], $content, $type);
-    }
-
-    /**
-     * 推送消息给群组关注者
-     * @param $groupId
-     * @param $content
-     * @param string $type
-     * @return array|bool
-     */
-    public function sendArticlesToGroup($groupId, $content, $type = 'text')
-    {
-        return $this->sendArticles([
-            'group_id' => $groupId
-        ], $content, $type);
-    }
-
-    /**
-     * 推送消息
+     * 群发消息
      * @param $target 发送对象 groupid 或 openid
      * @param $content 发送内容 (发送多媒体只需发送media_id)
      * @param string $type 发送类型text, mpnews, voice, image, mpvideo(发送给指定群组), video(发送给指定关注者)
      */
-    public function sendArticles(array $target, $content, $type)
+    public function sendArticles($target, $content, $type)
     {
+        // 判断推送给群组关注者还是指定关注者
+        $target = [
+            is_numeric($target) ? 'group_id' : 'touser' => $target
+        ];
         if ($type !== 'video') {
             $content = [
                 $type === 'text' ? 'content' : 'media_id' => $content
@@ -348,7 +501,7 @@ class Wechat extends Component
     }
 
     /**
-     * 取消推送消息
+     * 取消群发消息
      * @param $messageId
      */
     public function cancelSendArticles($messageId)
@@ -428,9 +581,9 @@ class Wechat extends Component
      * 获取分组列表
      * @return array|bool
      */
-    public function getGroups()
+    public function getGroupList()
     {
-        $result = $this->httpRaw(self::WECHAT_GROUP_LIST_URL . 'access_token=' . $this->getAccessToken());
+        $result = $this->httpRaw(self::WECHAT_GROUP_GET_URL . 'access_token=' . $this->getAccessToken());
         return isset($result['groups']) ? $result['groups'] : false;
     }
 
@@ -515,9 +668,9 @@ class Wechat extends Component
     /**
      * 获取关注者列表
      */
-    public function getMembers($nextOpenId = null)
+    public function getMemberList($nextOpenId = null)
     {
-        $result = $this->httpGet(self::WECHAT_MEMBER_LIST_URL . 'access_token=' . $this->getAccessToken(),
+        $result = $this->httpGet(self::WECHAT_MEMBER_GET_URL . 'access_token=' . $this->getAccessToken(),
             $nextOpenId === null ? [] : ['next_openid' => $nextOpenId]);
         return !isset($result['errcode']) ? $result : false;
     }
@@ -533,7 +686,7 @@ class Wechat extends Component
      */
     public function getCustomerServiceRecords($openId, $startTime, $endTime, $pageIndex = 1, $pageSize = 10)
     {
-        $result = $this->httpRaw(self::WECHAT_CUSTOMER_SERVICE_RECORD_LIST_URL . 'access_token=' .
+        $result = $this->httpRaw(self::WECHAT_CUSTOMER_SERVICE_RECORD_GET_URL . 'access_token=' .
             $this->getAccessToken(), json_encode([
                 'openid' => $openId,
                 'starttime' => $startTime,
