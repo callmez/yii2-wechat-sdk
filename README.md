@@ -19,14 +19,12 @@ Wechat定义方式
 //在config/web.php配置文件中定义component配置信息
 'components' => [
   .....
-  
   'wechat' => [
     'class' => 'yii\wechat\sdk\Wechat',
     'appId' => '微信公众平台中的appid',
     'appSecret' => '微信公众平台中的secret',
     'token' => '微信服务器对接您的服务器验证token'
   ]
-  
   ....
 ]
 // 全局公众号sdk使用
@@ -41,40 +39,59 @@ $wechat = Yii::createObject([
     'token' => '微信服务器对接您的服务器验证token'
 ]);
 ```
+
 Wechat方法使用
 ```php
 //获取access_token
 var_dump($wechat->accessToken);
+
 //获取二维码ticket
 $qrcode = $wechat->createQrCode(123);
 var_dump($qrcode);
-//展示二维码
-echo '<img src="' . $wechat->getQrCodeUrl($qrcode['ticket']) . '" />';
+
+//获取二维码
+$imgRawData = $wechat->getQrCodeUrl($qrcode['ticket']);
+
 //获取群组列表
 var_dump($wechat->getGroups());
+
+
 //创建分组
 $group = $wechat->createGroup('测试分组');
-$group ? '测试分组创建成功' : '测试分组创建失败';
+echo $group ? '测试分组创建成功' : '测试分组创建失败';
+
 //修改分组
-$wechat->updateGroupName($group['id'], '修改测试分组') ? '修改测试分组成功' : '测试分组创建失败';
+echo $wechat->updateGroupName($group['id'], '修改测试分组') ? '修改测试分组成功' : '测试分组创建失败';
+
+
 //根据关注者ID获取关注者所在分组ID
-$openID = 'oiNHQjh-8k4DrQgY5H7xofx_ayfQ';
+$openID = 'oiNHQjh-8k4DrQgY5H7xofx_ayfQ'; //此处应填写公众号关注者的唯一openId
+
 //修改关注者所在分组
 echo $wechat->updateMemberGroup($openID, 1) ? '修改关注者分组成功' : '修改关注者分组失败';
+
 //获取关注者所在分组
 echo $wechat->getGroupId($openID);
+
 //修改关注者备注
 echo $wechat->updateMemberRemark($openID, '测试更改备注') ? '关注者备注修改成功' : '关注者备注修改失败';
+
 //获取关注者基本信息
 var_dump($wechat->getMemberInfo($openID));
+
 //获取关注者列表
 var_dump($wechat->getMembers());
-//获取关注者的客服聊天记录
-var_dump($wechat->getCustomerServiceRecords($openID, strtotime(date('Y-01-01 00:00:00')), time()));
+
+//获取关注者的客服聊天记录, 
+var_dump($wechat->getCustomerServiceRecords($openID, mktime(0, 0, 0, 1, 1, date('Y')), time())); //获取今年的聊天数据(可能获取不到数据)
+
 //上传媒体文件
-$filePath = Yii::getAlias('@app/../../Koala.jpg');
+$filePath = '图片绝对路径'; //目前微信只开发jpg上传
 var_dump($media = $wechat->uploadMedia(realpath($filePath), 'image'));
+
+//下载媒体文件
 echo $wechat->getMedia($media['media_id']) ? 'media下载成功' : 'media下载失败';
+
 
 ```
 
