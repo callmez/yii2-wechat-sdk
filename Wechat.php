@@ -136,6 +136,10 @@ class Wechat extends Component
      */
     public $cacheTime = 3600;
     /**
+     * @var array 最后请求的错误信息
+     */
+    public $lastErrorInfo;
+    /**
      * 操作ID(会化状态）定义
      * 可用于显示客服聊天记录的操作详情
      * @var array
@@ -850,8 +854,10 @@ class Wechat extends Component
                     if ($force) {
                         $url = preg_replace("/access_token=([^&]*)/ies", '"access_token=" . \$this->getAccessToken(true)', $url);
                         $return = $this->parseHttpResult($url, $params, $method, false); // 就更新一次
+                        break;
                     }
-                    break;
+                default:
+                    $this->lastErrorInfo = $return;
             }
         }
         return $return;
