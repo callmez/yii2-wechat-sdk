@@ -110,6 +110,10 @@ class Wechat extends Component
      */
     const WECHAT_SHORT_URL_URL = '/cgi-bin/shorturl?';
     /**
+     * 网页授权获取关注者信息
+     */
+    const WECHAT_OAUTH2_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?';
+    /**
      * @var string 公众号appId
      */
     public $appId;
@@ -249,6 +253,35 @@ class Wechat extends Component
         } elseif ($this->token === null) {
             throw new InvalidConfigException('The token property must be set.');
         }
+    }
+
+    /**
+     * 微信服务器请求签名检测
+     * @param string $signature
+     * @param string $timestamp
+     * @param string $nonce
+     * @return bool
+     */
+    public function checkSignature($signature = null, $timestamp = null, $nonce = null)
+    {
+        $signature === null && $signature = isset($_GET['signature']) ? $_GET['signature'] : '';
+        $timestamp === null && $timestamp = isset($_GET['timestamp']) ? $_GET['timestamp'] : '';
+        $nonce === null && $nonce = isset($_GET['nonce']) ? $_GET['nonce'] : '';
+        $tmpArr = array($this->token, $timestamp, $nonce);
+        sort($tmpArr, SORT_STRING);
+        $tmpStr = implode($tmpArr);
+        return sha1($tmpStr) == $signature;
+    }
+
+    /**
+     * 解析微信服务器请求的xml数据
+     * @param srting $xml
+     * @return array
+     */
+    public function parseRequestData($xml = null)
+    {
+        $xml === null && $xml = file_get_contents("php://input");
+        return (array)simplexml_load_string($xml);
     }
 
     /**
@@ -742,6 +775,24 @@ class Wechat extends Component
             'long_url' => $longUrl,
         ]);
         return isset($result['short_url']) ? $result['short_url'] : false;
+    }
+
+    /**
+     * 网页授权获取用户基本信息, 通过此函数生成授权url
+     * @param $redirectUrl 跳转地址
+     * @param $state  回调跳转状态判定
+     * @param string $scope
+     * @return string
+     */
+    public function getAuthorizeUrl($redirectUrl, $state = 'authorize', $scope = 'snsapi_base')
+    {
+        return self::WECHAT_OAUTH2_AUTHORIZE_URL . http_build_query(array(
+            'appid' => $this->appId,
+            'redirect_uri' => $redirectUrl,
+            'response_type' => 'code',
+            'scope' => $scope,
+            'state' => $state,
+        )) . '#wechat_redirect';
     }
 
     /**
