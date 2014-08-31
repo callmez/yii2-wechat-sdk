@@ -9,6 +9,18 @@ yii2-wechat-sdk
 - >= php5.4
 - Yii2
 
+安装
+------------
+
+您可以使用composer来安装, 添加下列代码在您的``composer.json``文件中并执行``composer update``操作
+
+```json
+{
+    "require": {
+       "callmez/yii2-wechat-sdk": "dev-master"
+    }
+}
+```
 
 使用示例
 ------------
@@ -40,7 +52,7 @@ $wechat = Yii::createObject([
 ]);
 ```
 
-Wechat方法使用
+Wechat方法使用(部分示例)
 ```php
 //获取access_token
 var_dump($wechat->accessToken);
@@ -92,14 +104,7 @@ var_dump($media = $wechat->uploadMedia(realpath($filePath), 'image'));
 //下载媒体文件
 echo $wechat->getMedia($media['media_id']) ? 'media下载成功' : 'media下载失败';
 
-
 ```
-
-TODO
-------------
-- 模板消息
-- 微信小店
-- 微信支付
 
 反馈或贡献代码
 ------------
