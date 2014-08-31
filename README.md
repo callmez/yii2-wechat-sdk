@@ -97,7 +97,6 @@ echo $wechat->getMedia($media['media_id']) ? 'media下载成功' : 'media下载�
 
 TODO
 ------------
-- 模板消息
 - 微信小店
 - 微信支付
 

@@ -243,6 +243,46 @@ class Wechat extends Component
         '48001' => 'api功能未授权',
         '50001' => '用户未授权该api',
     ];
+    public $templateMessageErrorCode = [
+       ' -1' => '系统繁忙',
+        '0' => '请求成功',
+        '40001' => '验证失败',
+        '40002' => '不合法的凭证类型',
+        '40003' => '不合法的OpenID',
+        '40004' => '不合法的媒体文件类型,',
+        '40005' => '不合法的文件类型,',
+        '40006' => '不合法的文件大小',
+        '40007' => '不合法的媒体文件id',
+        '40008' => '不合法的消息类型',
+        '40009' => '不合法的图片文件大小',
+        '40010' => '不合法的语音文件大小',
+        '40011' => '不合法的视频文件大小',
+        '40012' => '不合法的缩略图文件大小',
+        '40013' => '不合法的APPID',
+        '41001' => '缺少access_token参数',
+        '41002' => '缺少appid参数',
+        '41003' => '缺少refresh_token参数',
+        '41004' => '缺少secret参数',
+        '41005' => '缺少多媒体文件数据',
+        '41006' => 'access_token超时',
+        '42001' => '需要GET请求',
+        '43002' => '需要POST请求',
+        '43003' => '需要HTTPS请求',
+        '44001' => '多媒体文件为空',
+        '44002' => 'POST的数据包为空',
+        '44003' => '图文消息内容为空',
+        '45001' => '多媒体文件大小超过限制',
+        '45002' => '消息内容超过限制',
+        '45003' => '标题字段超过限制',
+        '45004' => '描述字段超过限制',
+        '45005' => '链接字段超过限制',
+        '45006' => '图片链接字段超过限制',
+        '45007' => '语音播放时间超过限制',
+        '45008' => '图文消息超过限制',
+        '45009' => '接口调用超过限制',
+        '46001' => '不存在媒体数据',
+        '47001' => '解析JSON/XML内容错误',
+    ];
     /**
      * @var array
      */
@@ -371,6 +411,24 @@ class Wechat extends Component
     }
 
     /**
+     * 发送模板消息给关注者
+     * @param $toUser
+     * @param $templateId
+     * @param array $data
+     * @return bool
+     */
+    public function sendTemplateMessage($toUser, $templateId, array $data)
+    {
+        $data = [
+            'url' => null,
+            'topcolor' => '#FF0000'
+        ] + $data;
+        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(),
+            json_encode($data, JSON_UNESCAPED_UNICODE));
+        return isset($result['errmsg']) && $result['errmsg'] == 'ok' ? $result['msgid'] : false;
+    }
+
+    /**
      * 发送文本客服信息
      * @param $openId
      * @param $content
@@ -378,7 +436,7 @@ class Wechat extends Component
      */
     public function sendText($openId, $content)
     {
-        return $this->send([
+        return $this->sendCustomMessage([
             'touser' => $openId,
             'msgtype' => 'text',
             'text' => [
@@ -395,7 +453,7 @@ class Wechat extends Component
      */
     public function sendImage($openId, $mediaId)
     {
-        return $this->send([
+        return $this->sendCustomMessage([
             'touser' => $openId,
             'msgtype' => 'voice',
             'voice' => [
@@ -412,7 +470,7 @@ class Wechat extends Component
      */
     public function sendVoice($openId, $mediaId)
     {
-        return $this->send([
+        return $this->sendCustomMessage([
             'touser' => $openId,
             'msgtype' => 'voice',
             'voice' => [
@@ -432,7 +490,7 @@ class Wechat extends Component
      */
     public function sendVideo($openId, $mediaId, $thumbMediaId, $title = null, $description = null)
     {
-        return $this->send([
+        return $this->sendCustomMessage([
             'touser' => $openId,
             'msgtype' => 'video',
             'video' => [
@@ -456,7 +514,7 @@ class Wechat extends Component
      */
     public function sendMusic($openId, $thumbMediaId, $musicUrl, $hqMusicUrl, $title = null, $description = null)
     {
-        return $this->send([
+        return $this->sendCustomMessage([
             'touser' => $openId,
             'msgtype' => 'music',
             'music' => [
@@ -477,7 +535,7 @@ class Wechat extends Component
      */
     public function sendNews($openId, array $articles)
     {
-        return $this->send([
+        return $this->sendCustomMessage([
             'touser' => $openId,
             'msgtype' => 'news',
             'news' => [
@@ -491,9 +549,9 @@ class Wechat extends Component
      * @param array $data
      * @return bool
      */
-    protected function send(array $data)
+    protected function sendCustomMessage(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_ARTICLES_SEND_URL . 'access_token=' . $this->getAccessToken(),
+        $result = $this->httpRaw(self::WECHAT_CUSTOM_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(),
             json_encode($data, JSON_UNESCAPED_UNICODE));
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
     }
