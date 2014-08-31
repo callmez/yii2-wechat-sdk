@@ -6,8 +6,8 @@ yii2-wechat-sdk
 [![Latest Stable Version](https://poser.pugx.org/callmez/yii2-wechat-sdk/v/stable.svg)](https://packagist.org/packages/callmez/yii2-wechat-sdk) [![Total Downloads](https://poser.pugx.org/callmez/yii2-wechat-sdk/downloads.svg)](https://packagist.org/packages/callmez/yii2-wechat-sdk) [![Latest Unstable Version](https://poser.pugx.org/callmez/yii2-wechat-sdk/v/unstable.svg)](https://packagist.org/packages/callmez/yii2-wechat-sdk) [![License](https://poser.pugx.org/callmez/yii2-wechat-sdk/license.svg)](https://packagist.org/packages/callmez/yii2-wechat-sdk)
 环境条件
 ------------
-1. >= php5.4
-2. Yii2
+- >= php5.4
+- Yii2
 
 
 使用示例
@@ -95,6 +95,11 @@ echo $wechat->getMedia($media['media_id']) ? 'media下载成功' : 'media下载�
 
 ```
 
+TODO
+------------
+- 模板消息
+- 微信小店
+- 微信支付
 
 反馈或贡献代码
 ------------
