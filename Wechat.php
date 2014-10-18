@@ -474,14 +474,18 @@ class Wechat extends Component
 
     /**
      * 设置AccessToken
-     * @param string $token token字符串
-     * @param int $expire 过期时间
+     * @param string @param array $data  ['token' => 'token 字符串', 'expire' => 'token 超时时间']
      */
-    public function setAccessToken($token, $expire)
+    public function setAccessToken(array $data)
     {
+        if (!isset($data['token'])) {
+            throw new InvalidParamException('The wechat token must be set.');
+        } elseif(!isset($data['expire'])) {
+            throw new InvalidParamException('Wechat token expire time must be set.');
+        }
         $this->_accessToken = [
-            'token' => $token,
-            'expire' => $expire
+            'token' => $data['token'],
+            'expire' => $data['expire']
         ];
     }
 
