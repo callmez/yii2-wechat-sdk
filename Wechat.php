@@ -452,9 +452,10 @@ class Wechat extends Component
      */
     public function checkSignature($signature = null, $timestamp = null, $nonce = null)
     {
-        $signature === null && $signature = isset($_GET['signature']) ? $_GET['signature'] : '';
-        $timestamp === null && $timestamp = isset($_GET['timestamp']) ? $_GET['timestamp'] : '';
-        $nonce === null && $nonce = isset($_GET['nonce']) ? $_GET['nonce'] : '';
+        $request = Yii::$app->request;
+        $signature === null && $signature = $request->getQueryParam('signature', '');
+        $timestamp === null && $timestamp = $request->getQueryParam('timestamp', '');
+        $nonce === null && $nonce = $request->getQueryParam('nonce', '');
         $tmpArr = array($this->token, $timestamp, $nonce);
         sort($tmpArr, SORT_STRING);
         $tmpStr = implode($tmpArr);
