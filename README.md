@@ -32,7 +32,7 @@ Wechat定义方式
 'components' => [
   .....
   'wechat' => [
-    'class' => 'yii\wechat\sdk\Wechat',
+    'class' => 'callmez\wechat\sdk\Wechat',
     'appId' => '微信公众平台中的appid',
     'appSecret' => '微信公众平台中的secret',
     'token' => '微信服务器对接您的服务器验证token'
@@ -45,7 +45,7 @@ $wechat = Yii::$app->wechat;
 
 //多公众号使用方式
 $wechat = Yii::createObject([
-    'class' => 'yii\wechat\sdk\Wechat',
+    'class' => 'callmez\wechat\sdk\Wechat',
     'appId' => '微信公众平台中的appid',
     'appSecret' => '微信公众平台中的secret',
     'token' => '微信服务器对接您的服务器验证token'
