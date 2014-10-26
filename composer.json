@@ -16,8 +16,7 @@
         }
     ],
     "require": {
-        "yiisoft/yii2": "*",
-        "guzzle/guzzle": "3.9.*"
+        "yiisoft/yii2": "*"
     },
     "autoload": {
         "psr-4": {
