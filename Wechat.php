@@ -558,7 +558,7 @@ class Wechat extends Component
     public function getMenuList()
     {
         $result = $this->httpRaw(self::WECHAT_MENU_GET_URL . 'access_token=' . $this->getAccessToken());
-        return isset($result['menu']['button']) ? $result['menu']['button'] : fasle;
+        return isset($result['menu']['button']) ? $result['menu']['button'] : false;
     }
 
     /**
