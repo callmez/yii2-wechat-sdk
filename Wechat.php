@@ -485,7 +485,7 @@ class Wechat extends Component
             throw new InvalidParamException('Wechat token expire time must be set.');
         }
         $this->_accessToken = [
-            'token' => $data['token'],
+            'token' => $data['access_token'],
             'expire' => $data['expire']
         ];
     }
