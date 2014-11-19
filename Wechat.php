@@ -518,7 +518,7 @@ class Wechat extends Component
                 $this->trigger(self::EVENT_AFTER_ACCESS_TOKEN_UPDATE, new Event(['data' => $result]));
                 $this->setCache('access_token', $result);
             }
-            $this->setAccessToken($result['access_token'], $result['expire']);
+            $this->setAccessToken($result);
         }
         return $this->_accessToken['token'];
     }
