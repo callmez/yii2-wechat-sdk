@@ -479,10 +479,10 @@ class Wechat extends Component
      */
     public function setAccessToken(array $data)
     {
-        if (!isset($data['token'])) {
-            throw new InvalidParamException('The wechat token must be set.');
+        if (!isset($data['access_token'])) {
+            throw new InvalidParamException('The wechat access_token must be set.');
         } elseif(!isset($data['expire'])) {
-            throw new InvalidParamException('Wechat token expire time must be set.');
+            throw new InvalidParamException('Wechat access_token expire time must be set.');
         }
         $this->_accessToken = [
             'token' => $data['access_token'],
