@@ -387,46 +387,6 @@ class Wechat extends Component
         '48001' => 'api功能未授权',
         '50001' => '用户未授权该api',
     ];
-    public $templateMessageErrorCode = [
-        ' -1' => '系统繁忙',
-        '0' => '请求成功',
-        '40001' => '验证失败',
-        '40002' => '不合法的凭证类型',
-        '40003' => '不合法的OpenID',
-        '40004' => '不合法的媒体文件类型,',
-        '40005' => '不合法的文件类型,',
-        '40006' => '不合法的文件大小',
-        '40007' => '不合法的媒体文件id',
-        '40008' => '不合法的消息类型',
-        '40009' => '不合法的图片文件大小',
-        '40010' => '不合法的语音文件大小',
-        '40011' => '不合法的视频文件大小',
-        '40012' => '不合法的缩略图文件大小',
-        '40013' => '不合法的APPID',
-        '41001' => '缺少access_token参数',
-        '41002' => '缺少appid参数',
-        '41003' => '缺少refresh_token参数',
-        '41004' => '缺少secret参数',
-        '41005' => '缺少多媒体文件数据',
-        '41006' => 'access_token超时',
-        '42001' => '需要GET请求',
-        '43002' => '需要POST请求',
-        '43003' => '需要HTTPS请求',
-        '44001' => '多媒体文件为空',
-        '44002' => 'POST的数据包为空',
-        '44003' => '图文消息内容为空',
-        '45001' => '多媒体文件大小超过限制',
-        '45002' => '消息内容超过限制',
-        '45003' => '标题字段超过限制',
-        '45004' => '描述字段超过限制',
-        '45005' => '链接字段超过限制',
-        '45006' => '图片链接字段超过限制',
-        '45007' => '语音播放时间超过限制',
-        '45008' => '图文消息超过限制',
-        '45009' => '接口调用超过限制',
-        '46001' => '不存在媒体数据',
-        '47001' => '解析JSON/XML内容错误',
-    ];
     /**
      * @var array
      */
@@ -1693,7 +1653,7 @@ class Wechat extends Component
      * @param $url
      * @param $params
      * @param $method
-     * @param bool $force
+     * @param bool $force 是否强制更新access_token 并再次请求
      * @return bool|mixed
      */
     protected function parseHttpResult($url, $params, $method, $force = true)
@@ -1705,11 +1665,12 @@ class Wechat extends Component
         $return = json_decode($return, true) ? : $return;
         if (isset($return['errcode'])) {
             switch ($return['errcode']) {
-                case 40001: //access_token 失效,强制更新access_token重新获取
+                case 40001: //access_token 失效,强制更新access_token, 并更新地址重新执行请求
                     if ($force) {
-                        $url = preg_replace("/access_token=([^&]*)/ies",
-                            '"access_token=" . \$this->getAccessToken(true)', $url);
-                        $return = $this->parseHttpResult($url, $params, $method, false); // 就更新一次
+                        $url = preg_replace_callback("access_token=([^&]*)/i", function(){
+                            return 'access_token=' . $this->getAccessToken(true);
+                        }, $url);
+                        $return = $this->parseHttpResult($url, $params, $method, false); // 仅重新获取一次,否则容易死循环
                         break;
                     }
                 default:
