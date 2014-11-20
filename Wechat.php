@@ -505,9 +505,9 @@ class Wechat extends Component
      */
     public function createMenu(array $buttons)
     {
-        $result = $this->httpRaw(self::WECHAT_MENU_CREATE_URL . 'access_token=' . $this->getAccessToken(), json_encode([
+        $result = $this->httpRaw(self::WECHAT_MENU_CREATE_URL . 'access_token=' . $this->getAccessToken(), [
             'button' => $buttons
-        ]));
+        ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
     }
 
@@ -544,8 +544,7 @@ class Wechat extends Component
             'url' => null,
             'topcolor' => '#FF0000'
         ] + $data;
-        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode($data, JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(), $data);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok' ? $result['msgid'] : false;
     }
 
@@ -680,8 +679,7 @@ class Wechat extends Component
      */
     protected function sendCustomMessage(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_CUSTOM_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode($data, JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_CUSTOM_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(), $data);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
     }
 
@@ -707,10 +705,9 @@ class Wechat extends Component
      */
     public function uploadArticles(array $articles)
     {
-        $result = $this->httpRaw(self::WECHAT_ARTICLES_UPLOAD_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode([
-                'articles' => $articles
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_ARTICLES_UPLOAD_URL . 'access_token=' . $this->getAccessToken(), [
+            'articles' => $articles
+        ]);
         return isset($result['media_id']) ? $result : false;
     }
 
@@ -742,11 +739,10 @@ class Wechat extends Component
                 $type === 'text' ? 'content' : 'media_id' => $content
             ];
         }
-        $result = $this->httpRaw(self::WECHAT_ARTICLES_SEND_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode($target + [
-                    $type => $content,
-                    'msgtype' => $type
-                ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_ARTICLES_SEND_URL . 'access_token=' . $this->getAccessToken(), $target + [
+            $type => $content,
+            'msgtype' => $type
+        ]);
         return isset($result['msg_id']) ? $result : false;
     }
 
@@ -756,10 +752,9 @@ class Wechat extends Component
      */
     public function cancelSendArticles($messageId)
     {
-        $result = $this->httpRaw(self::WECHAT_ARTICLES_SEND_CANCEL_URL . 'access_token=' .
-            $this->getAccessToken(), [
-                'msgid' => $messageId
-            ]);
+        $result = $this->httpRaw(self::WECHAT_ARTICLES_SEND_CANCEL_URL . 'access_token=' . $this->getAccessToken(), [
+            'msgid' => $messageId
+        ]);
         isset($result['errmsg']) && $result['errmsg'] == 'ok';
     }
 
@@ -775,12 +770,11 @@ class Wechat extends Component
      */
     public function uploadVideo($mediaId, $title, $description)
     {
-        $result = $this->httpRaw(self::WECHAT_MEDIA_VIDEO_UPLOAD_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode([
-                'media_id' => $mediaId,
-                'title' => $title,
-                'description' => $description
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_MEDIA_VIDEO_UPLOAD_URL . 'access_token=' . $this->getAccessToken(), [
+            'media_id' => $mediaId,
+            'title' => $title,
+            'description' => $description
+        ]);
         return isset($result['media_id']) ? $result : false;
     }
 
@@ -824,12 +818,11 @@ class Wechat extends Component
      */
     public function createGroup($name)
     {
-        $result = $this->httpRaw(self::WECHAT_CREATE_GROUP_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode([
-                'group' => [
-                    'name' => $name
-                ]
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_CREATE_GROUP_URL . 'access_token=' . $this->getAccessToken(), [
+            'group' => [
+                'name' => $name
+            ]
+        ]);
         return isset($result['group']) ? $result['group'] : false;
     }
 
@@ -850,10 +843,9 @@ class Wechat extends Component
      */
     public function getGroupId($openId)
     {
-        $result = $this->httpRaw(self::WECHAT_GET_GROUP_ID_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode([
-                'openid' => $openId
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_GET_GROUP_ID_URL . 'access_token=' . $this->getAccessToken(), [
+            'openid' => $openId
+        ]);
         return isset($result['groupid']) ? $result['groupid'] : false;
     }
 
@@ -865,13 +857,12 @@ class Wechat extends Component
      */
     public function updateGroupName($id, $name)
     {
-        $result = $this->httpRaw(self::WECHAT_UPDATE_GROUP_NAME_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode([
-                'group' => [
-                    'id' => $id,
-                    'name' => $name
-                ]
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_UPDATE_GROUP_NAME_URL . 'access_token=' . $this->getAccessToken(), [
+            'group' => [
+                'id' => $id,
+                'name' => $name
+            ]
+        ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
     }
 
@@ -883,11 +874,10 @@ class Wechat extends Component
      */
     public function updateMemberGroup($openId, $toGroupId)
     {
-        $result = $this->httpRaw(self::WECHAT_MEMBER_GROUP_UPDATE_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode([
-                'openid' => $openId,
-                'to_groupid' => $toGroupId
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_MEMBER_GROUP_UPDATE_URL . 'access_token=' . $this->getAccessToken(), [
+            'openid' => $openId,
+            'to_groupid' => $toGroupId
+        ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
     }
 
@@ -898,11 +888,10 @@ class Wechat extends Component
      */
     public function updateMemberRemark($openId, $remark)
     {
-        $result = $this->httpRaw(self::WECHAT_MEMBER_REMARK_UPDATE_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode([
-                'openid' => $openId,
-                'remark' => $remark
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_MEMBER_REMARK_UPDATE_URL . 'access_token=' . $this->getAccessToken(), [
+            'openid' => $openId,
+            'remark' => $remark
+        ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
     }
 
@@ -928,8 +917,8 @@ class Wechat extends Component
      */
     public function getMemberList($nextOpenId = null)
     {
-        $result = $this->httpGet(self::WECHAT_MEMBER_GET_URL . 'access_token=' . $this->getAccessToken(),
-            $nextOpenId === null ? [] : ['next_openid' => $nextOpenId]);
+        $nextOpenId === null && $nextOpenId = ['next_openid' => $nextOpenId];
+        $result = $this->httpGet(self::WECHAT_MEMBER_GET_URL . 'access_token=' . $this->getAccessToken(), $nextOpenId);
         return !isset($result['errcode']) ? $result : false;
     }
 
@@ -944,14 +933,13 @@ class Wechat extends Component
      */
     public function getCustomerServiceRecords($openId, $startTime, $endTime, $pageIndex = 1, $pageSize = 1000)
     {
-        $result = $this->httpRaw(self::WECHAT_CUSTOMER_SERVICE_RECORD_GET_URL . 'access_token=' .
-            $this->getAccessToken(), json_encode([
-                'openid' => $openId,
-                'starttime' => $startTime,
-                'endtime' => $endTime,
-                'pageindex' => $pageIndex,
-                'pagesize' => $pageSize,
-            ]));
+        $result = $this->httpRaw(self::WECHAT_CUSTOMER_SERVICE_RECORD_GET_URL . 'access_token=' . $this->getAccessToken(), [
+            'openid' => $openId,
+            'starttime' => $startTime,
+            'endtime' => $endTime,
+            'pageindex' => $pageIndex,
+            'pagesize' => $pageSize,
+        ]);
         return isset($result['recordlist']) ? $result : false;
     }
 
@@ -974,8 +962,7 @@ class Wechat extends Component
         if (!$isLimitScene) {
             $params += ['expireSeconds' => $expireSeconds];
         }
-        $result = $this->httpRaw(self::WECHAT_CREATE_QRCODE_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode($params, JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_CREATE_QRCODE_URL . 'access_token=' . $this->getAccessToken(), $params);
         return isset($result['ticket']) ? $result : false;
     }
 
@@ -1133,8 +1120,7 @@ class Wechat extends Component
      */
     public function createProduct(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_PRODUCT_CREATE_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode($data, JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_SHOP_PRODUCT_CREATE_URL . 'access_token=' . $this->getAccessToken(), $data);
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['product_id'] : false;
     }
 
@@ -1159,8 +1145,7 @@ class Wechat extends Component
     public function updateProduct($productId, array $data)
     {
         $data['product_id'] = $productId;
-        $result = $this->httpRaw(self::WECHAT_SHOP_PRODUCT_UPDATE_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode($data, JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_SHOP_PRODUCT_UPDATE_URL . 'access_token=' . $this->getAccessToken(), $data);
         return isset($result['errmsg']) && $result['errmsg'] == 'success';
     }
 
@@ -1185,8 +1170,7 @@ class Wechat extends Component
      */
     public function updateProductStatus($productId, $status)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_STATUS_PRODUCT_UPDATE_URL .
-            'access_token=' . $this->getAccessToken(), [
+        $result = $this->httpRaw(self::WECHAT_SHOP_STATUS_PRODUCT_UPDATE_URL . 'access_token=' . $this->getAccessToken(), [
                 'product_id' => $productId,
                 'status' => $status
             ]);
@@ -1248,13 +1232,12 @@ class Wechat extends Component
      */
     public function addShopGroup($groupName, array $productIdList)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_GROUP_ADD_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode([
-                'group_detail' => [
-                    'group_name' => $groupName,
-                    'product_list' => $productIdList
-                ]
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_SHOP_GROUP_ADD_URL . 'access_token=' . $this->getAccessToken(), [
+            'group_detail' => [
+                'group_name' => $groupName,
+                'product_list' => $productIdList
+            ]
+        ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['group_id'] : false;
     }
 
@@ -1292,11 +1275,10 @@ class Wechat extends Component
      */
     public function updateShopGroupProduct($groupId, array $productList)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_GROUP_PRODUCT_UPDATE_URL .
-            'access_token=' . $this->getAccessToken(), [
-                'group_id' => $groupId,
-                'product' => $productList
-            ]);
+        $result = $this->httpRaw(self::WECHAT_SHOP_GROUP_PRODUCT_UPDATE_URL . 'access_token=' . $this->getAccessToken(), [
+            'group_id' => $groupId,
+            'product' => $productList
+        ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success';
     }
 
@@ -1343,8 +1325,7 @@ class Wechat extends Component
      */
     public function getCategorySkuList($cateId)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_CATEGORY_SKU_LIST_GET_URL .
-            'access_token=' . $this->getAccessToken(), [
+        $result = $this->httpRaw(self::WECHAT_SHOP_CATEGORY_SKU_LIST_GET_URL . 'access_token=' . $this->getAccessToken(), [
                 'cate_id' => $cateId
             ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['sku_table'] : false;
@@ -1357,8 +1338,7 @@ class Wechat extends Component
      */
     public function getCategoryProperty($cateId)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_CATEGORY_PROPERTY_GET_URL .
-            'access_token=' . $this->getAccessToken(), [
+        $result = $this->httpRaw(self::WECHAT_SHOP_CATEGORY_PROPERTY_GET_URL . 'access_token=' . $this->getAccessToken(), [
                 'cate_id' => $cateId
             ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['properties'] : false;
@@ -1374,10 +1354,9 @@ class Wechat extends Component
      */
     public function addDeliveryTemplate(array $deliveryTemplate)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_DELIVERY_TEMPLATE_ADD_URL .
-            'access_token=' . $this->getAccessToken(), json_encode([
-                'delivery_template' => $deliveryTemplate
-            ], JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_SHOP_DELIVERY_TEMPLATE_ADD_URL . 'access_token=' . $this->getAccessToken(), [
+            'delivery_template' => $deliveryTemplate
+        ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['template_id'] : false;
     }
 
@@ -1404,10 +1383,10 @@ class Wechat extends Component
     public function updateDeliverTemplate($templateId, array $deliveryTemplate)
     {
         $result = $this->httpRaw(self::WECHAT_SHOP_DELIVERY_TEMPLATE_UPDATE_URL .
-            'access_token=' . $this->getAccessToken(), json_encode([
+            'access_token=' . $this->getAccessToken(), [
                 'template_id' => $templateId,
                 'delivery_template' => $deliveryTemplate
-            ], JSON_UNESCAPED_UNICODE));
+            ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success';
     }
 
@@ -1443,8 +1422,7 @@ class Wechat extends Component
      */
     public function addShelf(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_SHELF_ADD_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode($data, JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_SHOP_SHELF_ADD_URL . 'access_token=' . $this->getAccessToken(), $data);
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['shelf_id'] : false;
     }
 
@@ -1472,8 +1450,7 @@ class Wechat extends Component
         $data = [
             'shelf_id' => $shelfId
         ] + $data;
-        $result = $this->httpRaw(self::WECHAT_SHOP_SHELF_UPDATE_URL . 'access_token=' . $this->getAccessToken(),
-            json_encode($data, JSON_UNESCAPED_UNICODE));
+        $result = $this->httpRaw(self::WECHAT_SHOP_SHELF_UPDATE_URL . 'access_token=' . $this->getAccessToken(), $data);
         return isset($result['errmsg']) && $result['errmsg'] == 'success';
     }
 
@@ -1644,6 +1621,7 @@ class Wechat extends Component
      */
     public function httpRaw($url, $params = null)
     {
+        is_array($params) && $params = json_encode($params, JSON_UNESCAPED_UNICODE);
         return $this->parseHttpResult($url, $params, 'raw');
     }
 
