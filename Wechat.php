@@ -1667,7 +1667,7 @@ class Wechat extends Component
             switch ($return['errcode']) {
                 case 40001: //access_token 失效,强制更新access_token, 并更新地址重新执行请求
                     if ($force) {
-                        $url = preg_replace_callback("access_token=([^&]*)/i", function(){
+                        $url = preg_replace_callback("/access_token=([^&]*)/i", function(){
                             return 'access_token=' . $this->getAccessToken(true);
                         }, $url);
                         $return = $this->parseHttpResult($url, $params, $method, false); // 仅重新获取一次,否则容易死循环
