@@ -507,7 +507,7 @@ class Wechat extends Component
     {
         $result = $this->httpRaw(self::WECHAT_MENU_CREATE_URL . 'access_token=' . $this->getAccessToken(), json_encode([
             'button' => $buttons
-        ]));
+        ], JSON_UNESCAPED_UNICODE));
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
     }
 
