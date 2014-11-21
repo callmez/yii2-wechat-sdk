@@ -1642,6 +1642,7 @@ class Wechat extends Component
         $return = $this->http($url, $params, $method);
         $return = json_decode($return, true) ? : $return;
         if (isset($return['errcode'])) {
+            $this->lastErrorInfo = $return;
             switch ($return['errcode']) {
                 case 40001: //access_token 失效,强制更新access_token, 并更新地址重新执行请求
                     if ($force) {
@@ -1649,10 +1650,8 @@ class Wechat extends Component
                             return 'access_token=' . $this->getAccessToken(true);
                         }, $url);
                         $return = $this->parseHttpResult($url, $params, $method, false); // 仅重新获取一次,否则容易死循环
-                        break;
                     }
-                default:
-                    $this->lastErrorInfo = $return;
+                    break;
             }
         }
         return $return;
