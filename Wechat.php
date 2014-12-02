@@ -1577,7 +1577,7 @@ class Wechat extends Component
     protected function setCache($name, $value, $duration = null)
     {
         $duration === null && $duration = $this->cacheTime;
-        return Yii::$app->getCache()->set("{$this->cacheKey}_{$this->appId}_{$name}", $value, $duration);
+        return Yii::$app->getCache()->set("{$this->cachePrefix}{$this->appId}_{$name}", $value, $duration);
     }
 
     /**
