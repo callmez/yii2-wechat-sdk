@@ -429,8 +429,8 @@ class Wechat extends Component
      */
     public function parseRequestData($xml = null)
     {
-        $xml === null && $xml = file_get_contents("php://input");
-        return empty($xml) ? [] : (array)simplexml_load_string($xml);
+        $xml === null && $xml = Yii::$app->request->getRawBody();
+        return empty($xml) ? [] : (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
     }
 
     /**
