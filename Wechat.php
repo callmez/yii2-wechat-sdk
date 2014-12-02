@@ -462,8 +462,9 @@ class Wechat extends Component
     {
         if ($force || $this->_accessToken === null || $this->_accessToken['expire'] < YII_BEGIN_TIME) {
             $result = false;
+            $cacheKey = 'wechat_access_token';
             if (!$force && $this->_accessToken === null) {
-                $result = $this->getCache('access_token', false);
+                $result = $this->getCache($cacheKey, false);
             }
             if ($result === false) {
                 $result = $this->httpGet(static::WECHAT_ACCESS_TOKEN_URL, [
@@ -476,7 +477,7 @@ class Wechat extends Component
                 }
                 $result['expire'] = $result['expires_in'] + time();
                 $this->trigger(self::EVENT_AFTER_ACCESS_TOKEN_UPDATE, new Event(['data' => $result]));
-                $this->setCache('access_token', $result);
+                $this->setCache($cacheKey, $result);
             }
             $this->setAccessToken($result);
         }
