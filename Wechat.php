@@ -273,7 +273,7 @@ class Wechat extends Component
      * 数据缓存前缀
      * @var string
      */
-    public $cacheKey = 'wechat_cache';
+    public $cachePrefix = 'wechat_cache_';
     /**
      * 数据缓存时长
      * @var int
@@ -462,9 +462,8 @@ class Wechat extends Component
     {
         if ($force || $this->_accessToken === null || $this->_accessToken['expire'] < YII_BEGIN_TIME) {
             $result = false;
-            $cacheKey = 'wechat_access_token';
             if (!$force && $this->_accessToken === null) {
-                $result = $this->getCache($cacheKey, false);
+                $result = $this->getCache('access_token', false);
             }
             if ($result === false) {
                 $result = $this->httpGet(static::WECHAT_ACCESS_TOKEN_URL, [
@@ -477,7 +476,7 @@ class Wechat extends Component
                 }
                 $result['expire'] = $result['expires_in'] + time();
                 $this->trigger(self::EVENT_AFTER_ACCESS_TOKEN_UPDATE, new Event(['data' => $result]));
-                $this->setCache($cacheKey, $result);
+                $this->setCache('access_token', $result);
             }
             $this->setAccessToken($result);
         }
@@ -1589,7 +1588,7 @@ class Wechat extends Component
      */
     protected function getCache($name, $defaultValue = null)
     {
-        return Yii::$app->getCache()->get("{$this->cacheKey}_{$this->appId}_{$name}", $defaultValue);
+        return Yii::$app->getCache()->get("{$this->cachePrefix}{$this->appId}_{$name}", $defaultValue);
     }
 
     /**
