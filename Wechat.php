@@ -390,7 +390,7 @@ class Wechat extends Component
     /**
      * @var array
      */
-    private $_accessToken;
+    protected $_accessToken;
 
     public function init()
     {
@@ -460,27 +460,38 @@ class Wechat extends Component
      */
     public function getAccessToken($force = false)
     {
-        if ($force || $this->_accessToken === null || $this->_accessToken['expire'] < YII_BEGIN_TIME) {
-            $result = false;
-            if (!$force && $this->_accessToken === null) {
-                $result = $this->getCache('access_token', false);
-            }
+        if ($this->_accessToken === null || $this->_accessToken['expire'] < YII_BEGIN_TIME || $force) {
+            $result = !$force && $this->_accessToken === null ? $this->getCache('access_token', false) : false;
             if ($result === false) {
-                $result = $this->httpGet(static::WECHAT_ACCESS_TOKEN_URL, [
-                    'appid' => $this->appId,
-                    'secret' => $this->appSecret,
-                    'grant_type' => 'client_credential'
-                ]);
-                if (!isset($result['access_token']) || !isset($result['expires_in'])) {
-                    throw new HttpException('Fail to get accessToken form wechat server.');
+                if (!($result = $this->requestAccessToken())) {
+                    throw new HttpException('Fail to get accessToken from wechat server.');
                 }
-                $result['expire'] = $result['expires_in'] + time();
                 $this->trigger(self::EVENT_AFTER_ACCESS_TOKEN_UPDATE, new Event(['data' => $result]));
-                $this->setCache('access_token', $result, $result['expires_in']);
+                $this->setCache('access_token', $result, $result['expire']);
             }
             $this->setAccessToken($result);
         }
         return $this->_accessToken['token'];
+    }
+
+    /**
+     * 请求服务器access_token
+     * @param string $grantType
+     * @return array
+     */
+    protected function requestAccessToken($grantType = 'client_credential')
+    {
+        $result = $this->httpGet(static::WECHAT_ACCESS_TOKEN_URL, [
+            'appid' => $this->appId,
+            'secret' => $this->appSecret,
+            'grant_type' => 'client_credential'
+        ]);
+        if (isset($result['access_token'])) {
+            $result['expire'] = $result['expires_in'] + (int)YII_BEGIN_TIME;
+            unset($result['expires_in']);
+            return $result;
+        }
+        return false;
     }
 
     /**
