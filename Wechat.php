@@ -1031,12 +1031,13 @@ class Wechat extends Component
      */
     public function getOauth2AccessToken($code, $grantType = 'authorization_code')
     {
-        return $this->httpGet(self::WECHAT_OAUTH2_ACCESS_TOKEN . http_build_query(array(
+        $result = $this->httpGet(self::WECHAT_OAUTH2_ACCESS_TOKEN . http_build_query(array(
             'appid' => $this->appId,
             'secret' => $this->appSecret,
             'code' => $code,
             'grant_type' => $grantType
         )));
+        return isset($result['errmsg']) ? false : $result;
     }
 
     /**
