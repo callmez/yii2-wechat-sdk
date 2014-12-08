@@ -110,9 +110,13 @@ class Wechat extends Component
      */
     const WECHAT_SHORT_URL_URL = '/cgi-bin/shorturl?';
     /**
-     * 网页授权获取关注者信息
+     * 网页授权获取用户信息
      */
     const WECHAT_OAUTH2_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize?';
+    /**
+     * 获取网页授权后获取用户access_token地址
+     */
+    const WECHAT_OAUTH2_ACCESS_TOKEN = '/sns/oauth2/access_token?';
     /**
      * 标记客户的投诉处理状态
      */
@@ -1008,15 +1012,31 @@ class Wechat extends Component
      * snsapi_userinfo （弹出授权页面，可通过openid拿到昵称、性别、所在地。并且，即使在未关注的情况下，只要用户授权，也能获取其信息）
      * @return string
      */
-    public function getAuthorizeUrl($redirectUrl, $state = 'authorize', $scope = 'snsapi_base')
+    public function getOauth2AuthorizeUrl($redirectUrl, $state = 'authorize', $scope = 'snsapi_base')
     {
-        return self::WECHAT_OAUTH2_AUTHORIZE_URL . http_build_query(array(
+        return self::WECHAT_OAUTH2_AUTHORIZE_URL . http_build_query([
             'appid' => $this->appId,
             'redirect_uri' => $redirectUrl,
             'response_type' => 'code',
             'scope' => $scope,
             'state' => $state,
-        )) . '#wechat_redirect';
+        ]) . '#wechat_redirect';
+    }
+
+    /**
+     * 通过跳转到getOauth2AuthorizeUrl返回的授权code获取用户资料 (该函数和getAccessToken函数作用不同.请参考文档)
+     * @param $code
+     * @param string $grantType
+     * @return array
+     */
+    public function getOauth2AccessToken($code, $grantType = 'authorization_code')
+    {
+        return $this->httpGet(self::WECHAT_OAUTH2_ACCESS_TOKEN . http_build_query(array(
+            'appid' => $this->appId,
+            'secret' => $this->appSecret,
+            'code' => $code,
+            'grant_type' => $grantType
+        )));
     }
 
     /**
