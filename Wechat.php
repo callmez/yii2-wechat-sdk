@@ -471,7 +471,7 @@ class Wechat extends Component
                     throw new HttpException('Fail to get accessToken from wechat server.');
                 }
                 $this->trigger(self::EVENT_AFTER_ACCESS_TOKEN_UPDATE, new Event(['data' => $result]));
-                $this->setCache('access_token', $result, $result['expire']);
+                $this->setCache('access_token', $result, $result['expires_in']);
             }
             $this->setAccessToken($result);
         }
@@ -492,7 +492,6 @@ class Wechat extends Component
         ]);
         if (isset($result['access_token'])) {
             $result['expire'] = $result['expires_in'] + (int)YII_BEGIN_TIME;
-            unset($result['expires_in']);
             return $result;
         }
         return false;
