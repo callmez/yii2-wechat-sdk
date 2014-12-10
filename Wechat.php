@@ -116,7 +116,19 @@ class Wechat extends Component
     /**
      * 获取网页授权后获取用户access_token地址
      */
-    const WECHAT_OAUTH2_ACCESS_TOKEN = '/sns/oauth2/access_token?';
+    const WECHAT_OAUTH2_ACCESS_TOKEN_URL = '/sns/oauth2/access_token?';
+    /**
+     * 网页授权后获取的access_token失效刷新地址
+     */
+    const WECHAT_OAUTH2_ACCESS_TOKEN_REFRESH_URL = '/sns/oauth2/refresh_token?';
+    /**
+     * 检验授权凭证（access_token）是否有效地址
+     */
+    const WECHAT_SNS_AUTH_URL = '/sns/auth?';
+    /**
+     * 拉取用户信息
+     */
+    const WEHCAT_SNS_USER_INFO_URL = '/sns/userinfo?';
     /**
      * 标记客户的投诉处理状态
      */
@@ -277,7 +289,7 @@ class Wechat extends Component
      * 数据缓存前缀
      * @var string
      */
-    public $cachePrefix = 'wechat_cache_';
+    public $cachePrefix = 'wechat_cache';
     /**
      * 数据缓存时长
      * @var int
@@ -420,7 +432,7 @@ class Wechat extends Component
         $signature === null && $signature = $request->getQueryParam('signature', '');
         $timestamp === null && $timestamp = $request->getQueryParam('timestamp', '');
         $nonce === null && $nonce = $request->getQueryParam('nonce', '');
-        $tmpArr = array($this->token, $timestamp, $nonce);
+        $tmpArr = [$this->token, $timestamp, $nonce];
         sort($tmpArr, SORT_STRING);
         $tmpStr = implode($tmpArr);
         return sha1($tmpStr) == $signature;
@@ -1004,7 +1016,8 @@ class Wechat extends Component
     }
 
     /**
-     * 网页授权获取用户基本信息, 通过此函数生成授权url
+     * 网页授权获取用户信息:第一步
+     * 通过此函数生成授权url
      * @param $redirectUrl 授权后重定向的回调链接地址，请使用urlencode对链接进行处理
      * @param $state 重定向后会带上state参数，开发者可以填写a-zA-Z0-9的参数值
      * @param string $scope 应用授权作用域，snsapi_base （不弹出授权页面，直接跳转，只能获取用户openid），
@@ -1023,6 +1036,7 @@ class Wechat extends Component
     }
 
     /**
+     * 网页授权获取用户信息:第二步
      * 通过跳转到getOauth2AuthorizeUrl返回的授权code获取用户资料 (该函数和getAccessToken函数作用不同.请参考文档)
      * @param $code
      * @param string $grantType
@@ -1030,12 +1044,61 @@ class Wechat extends Component
      */
     public function getOauth2AccessToken($code, $grantType = 'authorization_code')
     {
-        $result = $this->httpGet(self::WECHAT_OAUTH2_ACCESS_TOKEN . http_build_query(array(
+        $result = $this->httpGet(self::WECHAT_OAUTH2_ACCESS_TOKEN_URL . http_build_query([
             'appid' => $this->appId,
             'secret' => $this->appSecret,
             'code' => $code,
             'grant_type' => $grantType
-        )));
+        ]));
+        return isset($result['errmsg']) ? false : $result;
+    }
+
+    /**
+     * 网页授权获取用户信息:第三步(非必须)
+     * 由于access_token拥有较短的有效期，当access_token超时后，可以使用refresh_token进行刷新，refresh_token拥有较长的有效期（7天、30天、60天、90天），当refresh_token失效的后，需要用户重新授权。
+     * @param $refreshToken
+     * @param string $grantType
+     * @return array|bool
+     */
+    public function refreshOauth2AccessToken($refreshToken, $grantType = 'refresh_token')
+    {
+        $result = $this->httpGet(self::WECHAT_OAUTH2_ACCESS_TOKEN_REFRESH_URL . http_build_query([
+            'appid' => $this->appId,
+            'grant_type' => $grantType,
+            'refresh_token' => $refreshToken
+        ]));
+        return isset($result['errmsg']) ? false : $result;
+    }
+
+    /**
+     * 检验授权凭证（access_token）是否有效
+     * @param $accessToken
+     * @param $openId
+     * @return bool
+     */
+    public function checkOauth2AccessToken($accessToken, $openId)
+    {
+        $result = $this->httpGet(self::WECHAT_SNS_AUTH_URL . http_build_query([
+            'access_token' => $accessToken,
+            'openid' => $openId
+        ]));
+        return isset($result['errmsg']) && $result['errmsg'] == 'ok';
+    }
+
+    /**
+     * 如果网页授权作用域为snsapi_userinfo，则此时开发者可以通过网页授权后的access_token和openid拉取用户信息了。
+     * @param $openId
+     * @param string $accessToken
+     * @param string $lang
+     * @return array|bool
+     */
+    public function getSnsMemberInfo($openId, $oauth2AccessToken, $lang = 'zh_CN')
+    {
+        $result = $this->httpGet(self::WEHCAT_SNS_USER_INFO_URL . http_build_query([
+            'access_token' => $oauth2AccessToken,
+            'openid' => $openId,
+            'lang' => $lang
+        ]));
         return isset($result['errmsg']) ? false : $result;
     }
 
@@ -1608,7 +1671,7 @@ class Wechat extends Component
     protected function setCache($name, $value, $duration = null)
     {
         $duration === null && $duration = $this->cacheTime;
-        return Yii::$app->getCache()->set("{$this->cachePrefix}{$this->appId}_{$name}", $value, $duration);
+        return Yii::$app->getCache()->set($this->getCacheKey($name), $value, $duration);
     }
 
     /**
@@ -1619,7 +1682,17 @@ class Wechat extends Component
      */
     protected function getCache($name, $defaultValue = null)
     {
-        return Yii::$app->getCache()->get("{$this->cachePrefix}{$this->appId}_{$name}", $defaultValue);
+        return Yii::$app->getCache()->get($this->getCacheKey($name), $defaultValue);
+    }
+
+    /**
+     * 获取缓存的键值
+     * @param $name
+     * @return string
+     */
+    protected function getCacheKey($name)
+    {
+        return implode('_', [$this->cachePrefix, $this->appId, $name]);
     }
 
     /**
