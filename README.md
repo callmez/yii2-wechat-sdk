@@ -92,7 +92,7 @@ echo $wechat->updateMemberRemark($openID, '测试更改备注') ? '关注者备�
 var_dump($wechat->getMemberInfo($openID));
 
 //获取关注者列表
-var_dump($wechat->getMembers());
+var_dump($wechat->getMemberList());
 
 //获取关注者的客服聊天记录, 
 var_dump($wechat->getCustomerServiceRecords($openID, mktime(0, 0, 0, 1, 1, date('Y')), time())); //获取今年的聊天数据(可能获取不到数据)
