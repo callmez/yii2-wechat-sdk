@@ -986,7 +986,7 @@ class Wechat extends Component
             ]
         ];
         if (!$isLimitScene) {
-            $params += ['expireSeconds' => $expireSeconds];
+            $params += ['expire_seconds' => $expireSeconds];
         }
         $result = $this->httpRaw(self::WECHAT_CREATE_QRCODE_URL . 'access_token=' . $this->getAccessToken(), $params);
         return isset($result['ticket']) ? $result : false;
