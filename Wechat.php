@@ -16,6 +16,11 @@ use yii\base\InvalidConfigException;
  */
 class Wechat extends Component
 {
+    /**
+     * 获取 jsapiTicket 的 url
+     */
+    const WECHAT_JSAPI_TICKET_URL = '/cgi-bin/ticket/getticket?';
+
     const EVENT_AFTER_ACCESS_TOKEN_UPDATE = 'afterAccessTokenUpdate';
     /**
      * 微信接口基本地址
@@ -408,6 +413,12 @@ class Wechat extends Component
      */
     protected $_accessToken;
 
+    /**
+     * @var array ['ticket' => 'ticket 字符串', 'expre' => '超时的时间点' ]
+     */
+    protected $_jsapiTicket;
+
+
     public function init()
     {
         if ($this->appId === null) {
@@ -451,7 +462,7 @@ class Wechat extends Component
 
     /**
      * 设置AccessToken
-     * @param string @param array $data  ['token' => 'token 字符串', 'expire' => 'token 超时时间']
+     * @param array $data  ['token' => 'token 字符串', 'expire' => 'token 超时时间']
      */
     public function setAccessToken(array $data)
     {
@@ -480,7 +491,7 @@ class Wechat extends Component
             $result = !$force && $this->_accessToken === null ? $this->getCache('access_token', false) : false;
             if ($result === false) {
                 if (!($result = $this->requestAccessToken())) {
-                    throw new HttpException('Fail to get accessToken from wechat server.');
+                    throw new HttpException(500, 'Fail to get accessToken from wechat server.');
                 }
                 $this->trigger(self::EVENT_AFTER_ACCESS_TOKEN_UPDATE, new Event(['data' => $result]));
                 $this->setCache('access_token', $result, $result['expires_in']);
@@ -1809,4 +1820,131 @@ class Wechat extends Component
         }
         return false;
     }
+
+    /**
+     * 设置 jsapiTicket
+     *
+     * @param array $data same as [[$_jsapiTicket]]
+     * @throws \yii\base\InvalidParamException if ticket or expire not set.
+     */
+    public function setJsapiTicket(array $data)
+    {
+        if (!isset($data['ticket'])) {
+            throw new InvalidParamException('The wechat jsapiTicket must be set.');
+        } elseif(!isset($data['expire'])) {
+            throw new InvalidParamException('Wechat jsapiTicket expire time must be set.');
+        }
+        $this->_jsapiTicket = [
+            'ticket' => $data['ticket'],
+            'expire' => $data['expire']
+        ];
+    }
+
+    /**
+     * 获取 jsapiTicket
+     *
+     * @param boolean $force 是否强制重新获取 jsapiTicket
+     * @return string [[$_jsapiTicket]]['ticket']
+     * @throws \yii\web\HttpException if get jsapiTicket fail from wechat server
+     */
+    public function getJsapiTicket($force = false){
+
+        if ($force || $this->_jsapiTicket === null || $this->_jsapiTicket['expire'] < YII_BEGIN_TIME) {
+            $result = false;
+            if (!$force && $this->_jsapiTicket === null) {
+                $result = $this->getCache('jsapiTicket', false);
+            }
+            if ($result === false) {
+
+                $result = $this->httpGet(self::WECHAT_JSAPI_TICKET_URL, [
+                    'access_token'=>$this->getAccessToken(),
+                    'type'=>'jsapi',
+                ]);
+
+                // 如果失效就再取一次
+                if(isset($result['errcode']) && $result['errcode'] === 40001 ){
+                    $result = $this->httpGet(self::WECHAT_JSAPI_TICKET_URL, [
+                        'access_token'=>$this->getAccessToken(true),
+                        'type'=>'jsapi',
+                    ]);
+                }
+
+                if (!isset($result['ticket']) || !isset($result['expires_in'])) {
+                    throw new HttpException(500, 'Fail to get jsapiTicket form wechat server.');
+                }
+
+                $result['expire'] = $result['expires_in'] + time();
+                $this->setCache('jsapiTicket', $result);
+            }
+            $this->setJsapiTicket($result);
+        }
+        return $this->_jsapiTicket['ticket'];
+    }
+
+    /**
+     * 获取 js signature
+     *
+     * @link http://mp.weixin.qq.com/wiki/7/aaa137b55fb2e0456bf8dd9148dd613f.html#.E9.99.84.E5.BD.951-JS-SDK.E4.BD.BF.E7.94.A8.E6.9D.83.E9.99.90.E7.AD.BE.E5.90.8D.E7.AE.97.E6.B3.95
+     * @param string $url 不写默认为当前页面的 URL (当前网页的 URL，不包含 # 及其后面部分)
+     * @param integer $timestamp 时间戳 可不写
+     * @param string $noncestr 干扰字符，默认采用 [[\yii\base\Security::generateRandomKey()]] 生成的 32 位字符
+     * @return array
+     *
+     * ~~~
+     * [
+     *   'appid' => '',
+     *   'noncestr' => '',
+     *   'timestamp' => '',
+     *   'url' => '',
+     *   'signature' => '',
+     * ]
+     * ~~~
+     *
+     */
+    public function getJsSign($url=null, $timestamp = 0, $noncestr = ''){
+
+        $url === null && $url = Yii::$app->getRequest()->hostinfo . Yii::$app->getRequest()->url;
+
+        if (!$timestamp) $timestamp = time();
+
+	    if (!$noncestr) $noncestr = Yii::$app->security->generateRandomString();
+
+	    $ret = strpos($url,'#');
+	    if ($ret) $url = substr($url,0,$ret);
+	    $url = trim($url);
+	    if (empty($url)) return false;
+
+	    $arrdata = array("timestamp" => $timestamp, "noncestr" => $noncestr, "url" => $url, "jsapi_ticket" => $this->getJsapiTicket());
+	    $sign = $this->getSignature($arrdata);
+        $signPackage = [
+            'appid' => $this->appId,
+            'noncestr' => $noncestr,
+            'timestamp' => $timestamp,
+            'url' => $url,
+            'signature' => $sign,
+        ];
+
+        return $signPackage;
+    }
+    /**
+	 * 获取签名
+     *
+	 * @param array $arrdata 签名数组
+	 * @param string $method 签名方法
+	 * @return boolean|string 签名值
+	 */
+	public function getSignature($arrdata,$method="sha1") {
+		if (!function_exists($method)) return false;
+		ksort($arrdata);
+		$paramstring = "";
+		foreach($arrdata as $key => $value)
+		{
+			if(strlen($paramstring) == 0)
+				$paramstring .= $key . "=" . $value;
+			else
+				$paramstring .= "&" . $key . "=" . $value;
+		}
+		$Sign = $method($paramstring);
+		return $Sign;
+	}
 }
