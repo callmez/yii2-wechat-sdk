@@ -17,6 +17,7 @@ use yii\base\InvalidConfigException;
 class Wechat extends Component
 {
     const EVENT_AFTER_ACCESS_TOKEN_UPDATE = 'afterAccessTokenUpdate';
+    const EVENT_AFTER_JS_API_TICKET_UPDATE = 'afterJsApiTicketUpdate';
     /**
      * 微信接口基本地址
      */
@@ -25,6 +26,10 @@ class Wechat extends Component
      * access token获取
      */
     const WECHAT_ACCESS_TOKEN_URL = '/cgi-bin/token?';
+    /**
+     * js api ticket 获取
+     */
+    const WECHAT_JS_API_TICKET_URL = '/cgi-bin/ticket/getticket?';
     /**
      * 创建菜单
      */
@@ -403,10 +408,6 @@ class Wechat extends Component
         '48001' => 'api功能未授权',
         '50001' => '用户未授权该api',
     ];
-    /**
-     * @var array
-     */
-    protected $_accessToken;
 
     public function init()
     {
@@ -449,6 +450,8 @@ class Wechat extends Component
         return empty($xml) ? [] : (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
     }
 
+    protected $_accessToken;
+
     /**
      * 设置AccessToken
      * @param string @param array $data  ['token' => 'token 字符串', 'expire' => 'token 超时时间']
@@ -480,7 +483,7 @@ class Wechat extends Component
             $result = !$force && $this->_accessToken === null ? $this->getCache('access_token', false) : false;
             if ($result === false) {
                 if (!($result = $this->requestAccessToken())) {
-                    throw new HttpException('Fail to get accessToken from wechat server.');
+                    throw new HttpException(500, 'Fail to get access_token from wechat server.');
                 }
                 $this->trigger(self::EVENT_AFTER_ACCESS_TOKEN_UPDATE, new Event(['data' => $result]));
                 $this->setCache('access_token', $result, $result['expires_in']);
@@ -507,6 +510,134 @@ class Wechat extends Component
             return $result;
         }
         return false;
+    }
+
+    protected $_jsApiTicket;
+
+    /**
+     * 设置jsapi_ticket
+     * @param string @param array $data  ['ticket' => 'ticket 字符串', 'expire' => 'ticket 超时时间']
+     */
+    public function setJsApiTicket(array $data)
+    {
+        if (!isset($data['ticket'])) {
+            throw new InvalidParamException('The wechat js api ticket must be set.');
+        } elseif(!isset($data['expire'])) {
+            throw new InvalidParamException('Wechat jsapi_ticket expire time must be set.');
+        }
+        $this->_jsApiTicket = [
+            'ticket' => $data['ticket'],
+            'expire' => $data['expire']
+        ];
+    }
+
+    /**
+     * 获取jsapi_ticket
+     * 会自动判断超时时间然后重新获取新的ticket
+     * (会智能缓存jsApiTicket)
+     * @param bool $force
+     * @return mixed
+     * @throws HttpException
+     */
+    public function getJsApiTicket($force = false)
+    {
+        if ($this->_jsApiTicket === null || $this->_jsApiTicket['expire'] < YII_BEGIN_TIME || $force) {
+            $result = !$force && $this->_jsApiTicket === null ? $this->getCache('js_api_ticket', false) : false;
+            if ($result === false) {
+                if (!($result = $this->requestJsApiTicket())) {
+                    throw new HttpException(500, 'Fail to get jsapi_ticket from wechat server.');
+                }
+                $this->trigger(self::EVENT_AFTER_JS_API_TICKET_UPDATE, new Event(['data' => $result]));
+                $this->setCache('js_api_ticket', $result, $result['expires_in']);
+            }
+            $this->setJsApiTicket($result);
+        }
+        return $this->_accessToken['token'];
+    }
+
+    /**
+     * 请求服务器jsapi_ticket
+     * @param string $type
+     * @return array
+     */
+    protected function requestJsApiTicket($type = 'jsapi')
+    {
+        $result = $this->httpGet(static::WECHAT_JS_API_TICKET_URL, [
+            'access_token' => $this->getAccessToken(),
+            'type' => $type
+        ]);
+        if (isset($result['ticket'])) {
+            $result['expire'] = $result['expires_in'] + (int)YII_BEGIN_TIME;
+            return $result;
+        }
+        return false;
+    }
+
+    /**
+     * 生成js 必要的config
+     * 只需在视图文件输出JS代码:
+     *  wx.config(<?= $wehcat->jsApiConfig() ?>); // 默认全权限
+     *  wx.config(<?= $wehcat->jsApiConfig([ // 只允许使用分享到朋友圈功能
+     *      'jsApiList' => [
+     *          'onMenuShareTimeline'
+     *      ]
+     *  ]) ?>);
+     * @param array $config
+     * @param bool $debug
+     * @return array
+     * @throws HttpException
+     */
+    public function jsApiConfig(array $config = [], $debug = YII_DEBUG)
+    {
+        $data = [
+            'jsapi_ticket' => $this->getJsApiTicket(),
+            'noncestr' => Yii::$app->getSecurity()->generateRandomString(16),
+            'timestamp' => (int)YII_BEGIN_TIME,
+            'url' => explode('#', Yii::$app->getRequest()->getHostInfo() . Yii::$app->getRequest()->getUrl())[0]
+        ];
+        return array_merge([
+            'debug' => $debug,
+            'appId' => $this->appId,
+            'timestamp' => $data['timestamp'],
+            'nonceStr' => $data['nonceStr'],
+            'signature' => sha1(urldecode(http_build_query($data))),
+            'jsApiList' => [
+                'checkJsApi',
+                'onMenuShareTimeline',
+                'onMenuShareAppMessage',
+                'onMenuShareQQ',
+                'onMenuShareWeibo',
+                'hideMenuItems',
+                'showMenuItems',
+                'hideAllNonBaseMenuItem',
+                'showAllNonBaseMenuItem',
+                'translateVoice',
+                'startRecord',
+                'stopRecord',
+                'onRecordEnd',
+                'playVoice',
+                'pauseVoice',
+                'stopVoice',
+                'uploadVoice',
+                'downloadVoice',
+                'chooseImage',
+                'previewImage',
+                'uploadImage',
+                'downloadImage',
+                'getNetworkType',
+                'openLocation',
+                'getLocation',
+                'hideOptionMenu',
+                'showOptionMenu',
+                'closeWindow',
+                'scanQRCode',
+                'chooseWXPay',
+                'openProductSpecificView',
+                'addCard',
+                'chooseCard',
+                'openCard'
+            ]
+        ], $config);
     }
 
     /**
