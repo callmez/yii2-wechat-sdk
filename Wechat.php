@@ -576,12 +576,12 @@ class Wechat extends Component
     /**
      * 生成js 必要的config
      * 只需在视图文件输出JS代码:
-     *  wx.config(<?= $wehcat->jsApiConfig() ?>); // 默认全权限
-     *  wx.config(<?= $wehcat->jsApiConfig([ // 只允许使用分享到朋友圈功能
+     *  wx.config(<?= json_encode($wehcat->jsApiConfig()) ?>); // 默认全权限
+     *  wx.config(<?= json_encode($wehcat->jsApiConfig([ // 只允许使用分享到朋友圈功能
      *      'jsApiList' => [
      *          'onMenuShareTimeline'
      *      ]
-     *  ]) ?>);
+     *  ])) ?>);
      * @param array $config
      * @param bool $debug
      * @return array
