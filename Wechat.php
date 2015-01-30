@@ -1878,9 +1878,15 @@ class Wechat extends Component
         $return = json_decode($return, true) ? : $return;
         if (isset($return['errcode']) && $return['errcode']) {
             $this->lastErrorInfo = $return;
+            $log = [
+                'class' => __METHOD__,
+                'arguments' => func_get_args(),
+                'result' => $return,
+            ];
             switch ($return['errcode']) {
                 case 40001: //access_token 失效,强制更新access_token, 并更新地址重新执行请求
                     if ($force) {
+                        Yii::warning($log, 'wechat.sdk');
                         $url = preg_replace_callback("/access_token=([^&]*)/i", function(){
                             return 'access_token=' . $this->getAccessToken(true);
                         }, $url);
@@ -1888,6 +1894,7 @@ class Wechat extends Component
                     }
                     break;
             }
+            Yii::error($log, 'wechat.sdk');
         }
         return $return;
     }
