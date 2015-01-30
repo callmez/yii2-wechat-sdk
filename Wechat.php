@@ -552,7 +552,7 @@ class Wechat extends Component
             }
             $this->setJsApiTicket($result);
         }
-        return $this->_accessToken['token'];
+        return $this->_jsApiTicket['ticket'];
     }
 
     /**
