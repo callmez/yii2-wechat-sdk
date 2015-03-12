@@ -11,6 +11,7 @@ use yii\base\InvalidConfigException;
 /**
  * 微信公众号API类
  * 相关文档请参考 http://mp.weixin.qq.com/wiki 微信公众平台开发者文档
+ *
  * @package callmez\wechat\components
  * @version 1.0.0alpha
  */
@@ -870,7 +871,7 @@ class Wechat extends Component
 
     /**
      * 群发消息
-     * @param $target 发送对象 groupid 或 openid
+     * @param array $target 发送对象 groupid 或 openid
      * ~~~
      * $target = [
      *     'filter' => [
@@ -888,6 +889,9 @@ class Wechat extends Component
      * ~~~
      * @param $content 发送内容 (发送多媒体只需发送media_id)
      * @param string $type 发送类型text, mpnews, voice, image, mpvideo(发送给指定群组), video(发送给指定关注者)
+     * @param $type
+     * @return array|bool
+     * @throws HttpException
      */
     public function sendArticles(array $target, $content, $type)
     {
@@ -1042,6 +1046,8 @@ class Wechat extends Component
      * 修改关注者备注
      * @param $openId 关注者openID
      * @param $remark 备注内容
+     * @return bool
+     * @throws HttpException
      */
     public function updateMemberRemark($openId, $remark)
     {
@@ -1081,12 +1087,13 @@ class Wechat extends Component
 
     /**
      * 获取关注者的客服聊天记录
-     * @param $openId 关注者的openID
-     * @param $startTime 查询开始时间，UNIX时间戳
-     * @param $endTime 查询结束时间，UNIX时间戳，每次查询不能跨日查询
-     * @param $pageIndex 每页大小，每页最多拉取1000条
-     * @param $pageSize 查询第几页，默认从1开始
+     * @param string $openId 关注者的openID
+     * @param int $startTime 查询开始时间，UNIX时间戳
+     * @param int $endTime 查询结束时间，UNIX时间戳，每次查询不能跨日查询
+     * @param int $pageIndex 每页大小，每页最多拉取1000条
+     * @param int $pageSize 查询第几页，默认从1开始
      * @return array|bool
+     * @throws HttpException
      */
     public function getCustomerServiceRecords($openId, $startTime, $endTime, $pageIndex = 1, $pageSize = 1000)
     {
@@ -1102,23 +1109,30 @@ class Wechat extends Component
 
     /**
      * 创建QR二维码
-     * @param $sceneId 场景值ID，临时二维码时为32位非0整型，永久二维码时最大值为100000（目前参数只支持1--100000）
-     * @param bool $isLimitScene 是否永久二维码
-     * @param int $expireSeconds 临时二维码存在时间 (永久二维码该参数无效)
+     * 调用的参数示例
+     * $params = [
+     *     // 二维码类型，QR_SCENE为临时,QR_LIMIT_SCENE为永久,QR_LIMIT_STR_SCENE为永久的字符串参数值,默认为QR_SCENE
+     *     'action_name' => 'QR_SCENE',
+     *     'action_info' => [
+     *         'scene' => [
+     *             // 场景值ID，临时二维码时为32位非0整型，永久二维码时最大值为100000（目前参数只支持1--100000）
+     *             'scene_id' => $sceneId,
+     *             // 场景值ID（字符串形式的ID），字符串类型，长度限制为1到64，仅永久二维码支持此字段
+     *             'scene_str' => $sceneStr
+     *         ]
+     *     ]
+     * ];
+     * @param array $params
+     * @return array|bool
+     * @throws HttpException
      */
-    public function createQrCode($sceneId, $isLimitScene = false, $expireSeconds = 1800)
+    public function createQrCode(array $params)
     {
-        $params = [
-            'action_name' => $isLimitScene ? 'QR_LIMIT_SCENE' : 'QR_SCENE',
-            'action_info' => [
-                'scene' => [
-                    'scene_id' => $sceneId
-                ]
-            ]
-        ];
-        if (!$isLimitScene) {
-            $params += ['expire_seconds' => $expireSeconds];
-        }
+        $params = array_merge([
+            'expire_seconds' => 1800,
+            'action_name' => 'QR_SCENE'
+        ], $params);
+
         $result = $this->httpRaw(self::WECHAT_CREATE_QRCODE_URL . 'access_token=' . $this->getAccessToken(), $params);
         return isset($result['ticket']) ? $result : false;
     }
@@ -1126,6 +1140,7 @@ class Wechat extends Component
     /**
      * 获取二维码图片
      * @param $ticket 获取的二维码ticket，凭借此ticket可以在有效时间内换取二维码。
+     * @return string
      */
     public function getQrCodeUrl($ticket)
     {
@@ -1150,7 +1165,7 @@ class Wechat extends Component
      * 网页授权获取用户信息:第一步
      * 通过此函数生成授权url
      * @param $redirectUrl 授权后重定向的回调链接地址，请使用urlencode对链接进行处理
-     * @param $state 重定向后会带上state参数，开发者可以填写a-zA-Z0-9的参数值
+     * @param string $state 重定向后会带上state参数，开发者可以填写a-zA-Z0-9的参数值
      * @param string $scope 应用授权作用域，snsapi_base （不弹出授权页面，直接跳转，只能获取用户openid），
      * snsapi_userinfo （弹出授权页面，可通过openid拿到昵称、性别、所在地。并且，即使在未关注的情况下，只要用户授权，也能获取其信息）
      * @return string
@@ -1219,7 +1234,7 @@ class Wechat extends Component
     /**
      * 如果网页授权作用域为snsapi_userinfo，则此时开发者可以通过网页授权后的access_token和openid拉取用户信息了。
      * @param $openId
-     * @param string $accessToken
+     * @param string $oauth2AccessToken
      * @param string $lang
      * @return array|bool
      */
@@ -1481,8 +1496,10 @@ class Wechat extends Component
 
     /**
      * 修改分组属性
-     * @param int $groupId
+     * @param $groupId
      * @param $groupName
+     * @return bool
+     * @throws HttpException
      */
     public function updateShopGroup($groupId, $groupName)
     {
@@ -1497,6 +1514,8 @@ class Wechat extends Component
      * 修改分组商品
      * @param $groupId
      * @param array $productList 分组的商品集合
+     * @return bool
+     * @throws HttpException
      */
     public function updateShopGroupProduct($groupId, array $productList)
     {
@@ -1708,7 +1727,9 @@ class Wechat extends Component
 
     /**
      * 根据订单ID获取订单详情
-     * @param int $orderId
+     * @param $orderId
+     * @return bool
+     * @throws HttpException
      */
     public function getOrder($orderId)
     {
