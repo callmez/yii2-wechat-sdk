@@ -650,9 +650,9 @@ class Wechat extends Component
      *           'type' => 'click',
      *           'name' => '今日歌曲',
      *           'key' => 'V1001_TODAY_MUSIC'
-     *      ]
+     *      ],
      *      [
-     *           'type' => 'click',
+     *           'type' => 'view',
      *           'name' => '搜索',
      *           'url' => 'http://www.soso.com'
      *      ]
