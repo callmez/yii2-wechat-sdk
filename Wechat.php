@@ -44,6 +44,10 @@ class Wechat extends Component
      */
     const WECHAT_CUSTOM_MESSAGE_SEND_URL = '/cgi-bin/message/custom/send?';
     /**
+     * 发送模板消息
+     */
+    const WECHAT_TEMPLATE_MESSAGE_SEND_URL = '/message/template/send?';
+    /**
      * 消息上传
      */
     const WECHAT_ARTICLES_UPLOAD_URL = '/cgi-bin/media/uploadnews?';
