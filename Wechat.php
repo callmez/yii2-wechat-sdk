@@ -737,7 +737,7 @@ class Wechat extends Component
     {
         return $this->sendCustomMessage([
             'touser' => $openId,
-            'msgtype' => 'voice',
+            'msgtype' => 'image',
             'voice' => [
                 'media_id' => $mediaId
             ]
