@@ -958,7 +958,8 @@ class Wechat extends Component
     {
         $result = $this->httpPost(self::WECHAT_MEDIA_UPLOAD_URL .
             'access_token=' . $this->getAccessToken() . '&type=' . $mediaType, [
-                'media' => '@' . $filePath
+                // php 5.5将抛弃@写法,引用CURLFile类来实现
+                'media' => class_exists('\CURLFile') ? new \CURLFile($filePath) : '@' . $filePath
             ]);
         return isset($result['media_id']) ? $result : false;
     }
