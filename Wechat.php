@@ -271,6 +271,94 @@ class Wechat extends Component
      * 上传图片(小店接口)
      */
     const WECHAT_SHOP_IMAGE_UPLOAD_URL = '/merchant/common/upload_img?';
+
+    //==============卡券部分============================================
+    /**
+     * 获取微信卡券颜色列表
+     */
+    const WECHAT_GET_CARD_COLORS_URL = '/card/getcolors?';
+    /**
+     * 创建卡券
+     */
+    const WECHAT_CREATE_CARD_URL = '/card/create?';
+    /**
+     * 创建二维码
+     */
+    const WECHAT_CARD_QRCODE_CREATE_URL = '/card/qrcode/create?';
+    /**
+     * 获取单个卡券详情
+     */
+    const WECHAT_GET_CARD_URL = '/card/get?';
+    /**
+     * 核销卡券
+     */
+    const WECHAT_CARD_CONSUME_URL = '/card/code/consume?';
+    /**
+     * 删除卡券
+     */
+    const WECHAT_DELETE_CARD_URL = '/card/delete?';
+    /**
+     * 得到批量卡券
+     */
+    const WECHAT_GET_BATCH_CARD_URL = '/card/batchget?';
+    /**
+     * 得到卡券CODE
+     */
+    const WECHAT_GET_CARD_CODE_URL = '/card/code/get?';
+    /**
+     * 更新卡券信息
+     */
+    const WECHAT_UPDATE_CARD_URL = '/card/update?';
+    /**
+     * 更新库存
+     */
+    const WECHAT_MODIFY_CARD_STOCK = '/card/modifystock?';
+    /**
+     * 卡券CODE解码
+     */
+    const WECHAT_CARD_CODE_DECRYPT_URL = '/card/code/decrypt?';
+    /**
+     * 更新卡券CODE
+     */
+    const WECHAT_CARD_CODE_UPDATE_URL = '/card/code/update?';
+    /**
+     * 设置卡券失效
+     */
+    const WECHAT_SET_CARD_CODE_UNAVAILABLE_URL = '/card/code/unavailable?';
+    /**
+     * 激活/绑定会员卡
+     */
+    const WECHAT_MEMBERCARD_ACTIVATE_URL = '/card/membercard/activate?';
+    /**
+     * 更新会员信息
+     */
+    const WECHAT_MEMBERCARD_UPDATEUSER_URL = '/card/membercard/updateuser?';
+    /**
+     * 图片文件上传(不同于媒体图片该接口用于上传门店LOGO)
+     * T_T不知道微信的程序员怎么想要单独给logo开个图片上传
+     */
+    const WECHAT_MEDIA_IMG_UPLOAD_URL = '/cgi-bin/media/uploadimg?';
+    /**
+     * 创建门店
+     */
+    const WECHAT_ADD_POI_URL = '/cgi-bin/poi/addpoi?';
+    /**
+     * 查询单个门店
+     */
+    const WECHAT_GET_POI_URL = '/cgi-bin/poi/getpoi?';
+    /**
+     * 查询门店列表
+     */
+    const WECHAT_GET_POI_LIST_URL = '/cgi-bin/poi/getpoilist?';
+    /**
+     * 删除门店
+     */
+    const WECHAT_DEL_POI_URL = '/cgi-bin/poi/delpoi?';
+    /**
+     * 更新门店信息
+     */
+    const WECHAT_UPDATE_POI_URL = '/cgi-bin/poi/updatepoi?';
+
     /**
      * @var string 公众号appId
      */
@@ -1817,6 +1905,435 @@ class Wechat extends Component
             'access_token=' . $this->getAccessToken() . '&filename=' . $fileName, file_get_contents($filePath));
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['image_url'] : false;
     }
+
+    //=======================卡券部分=========================
+    /**
+     * 得到Code信息
+     * @param $code
+     * @param null $card_id 要消耗序列号所述的 card_id,生成券时 use_custom_code 填写 true 时必填。非自 定义 code 不必填写。
+     * @return array|bool
+     * @throws HttpException
+     */
+    public function getCode($code, $card_id = null)
+    {
+        if (empty($code)) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_GET_CARD_CODE_URL . 'access_token=' . $this->getAccessToken(), [
+            'code' => $code,
+            !empty($card_id) && 'card_id' => $card_id
+        ]);
+
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? $result['card'] : false;
+    }
+
+    /**
+     * 获取解码后的Code
+     * @param $encrypt_code 通过 choose_card_info 获取的加密字符串
+     * @return bool
+     * @throws HttpException
+     */
+    public function getDecryptCode($encrypt_code)
+    {
+        $result = $this->httpPost(static::WECHAT_CARD_CODE_DECRYPT_URL . 'access_token=' . $this->getAccessToken(), [
+           'encrypt_code' => $encrypt_code
+        ]);
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? $result['code'] : false;
+    }
+
+    /**
+     * 更新Code
+     * 为确保转赠后的安全性,微信允许自定义code的商户对已下发的code进行更改。
+     * 注:为避免用户疑惑,建议仅在发生转赠行为后(发生转赠后,微信会通过事件推送的方式告知商户被转赠的卡券code)对用户的code进行更改。
+     * @param $code
+     * @param $card_id
+     * @param $new_code
+     * @return bool
+     * @throws HttpException
+     */
+    public function updateCode($code, $card_id, $new_code)
+    {
+        if (empty($code) || empty($card_id) || $new_code) {
+            return false;
+        }
+
+        $result = $this->httpPost(static::WECHAT_CARD_CODE_UPDATE_URL . 'access_token=' . $this->getAccessToken(), [
+            'code' => $code,
+            'card_id' => $card_id,
+            'new_code' => $new_code
+        ]);
+
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
+    }
+
+    /**
+     * 设置卡券为失效
+     * @param $code
+     * @param null $card_id
+     * @return bool
+     * @throws HttpException
+     */
+    public function setCodeUnavailable($code, $card_id = null)
+    {
+        if (empty($code)) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_SET_CARD_CODE_UNAVAILABLE_URL . 'access_token=' . $this->getAccessToken(), [
+            'code' => $code,
+            empty($card_id) && 'card_id' => $card_id
+        ]);
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
+    }
+
+    /**
+     * 消费(核销)卡券
+     * @param $code
+     * @param null $cardId
+     * @return array|bool
+     * @throws HttpException
+     */
+    public function cardConsume($code, $cardId = null)
+    {
+        $result = $this->httpPost(static::WECHAT_CARD_CONSUME_URL . 'access_token=' . $this->getAccessToken(), [
+            'code' => $code,
+            'card_id' => $cardId
+        ]);
+
+        if (isset($result['errmsg']) && $result['errmsg'] === 'ok') {
+            return ['card_id' => $result['card']['card_id'], 'openid' => $result['openid']];
+        }
+        return false;
+    }
+
+    /**
+     * 创建卡券二维码
+     * @param array $requestParams
+     * $requestParams = [
+     *      'card_id' => '', (必须)
+     *      'code' => '', (当卡券use_custom_code字段为true时必填)
+     *      'openid' => '', (当卡券bind_openid字段为true时必填)
+     *      'expire_seconds' => 0,(指定二维码有效时间60~1800秒之间,不填默认为永久)
+     *      'is_unique_code' => false, (领取是否可再次扫描)
+     *      'balance' => 1, (红包余额单位为分)
+     *      'outer_id' => 0 (领取场景值)
+     * ]
+     * @return bool|string 生成二维码的ticket
+     * @throws HttpException
+     */
+    public function createCardQrcode($requestParams = [])
+    {
+        if (!isset($requestParams['card_id'])) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_CARD_QRCODE_CREATE_URL . 'access_token=' . $this->getAccessToken(),
+                    $requestParams
+            );
+
+        return isset($result['ticket']) ? $result['ticket'] : false;
+    }
+
+    /**
+     * 创建卡券
+     * @param array $requestParams
+     * @return array|bool
+     * @throws HttpException
+     */
+    public function createCard($requestParams = [])
+    {
+        if (empty($requestParams)) {
+            return false;
+        }
+
+        $result = $this->httpPost(static::WECHAT_CREATE_CARD_URL . 'access_token=' . $this->getAccessToken(), $requestParams);
+        return isset($result['card_id']) ? $result['card_id'] : false;
+    }
+
+    /**
+     * 得到单个卡券详情
+     * @param $card_id
+     * @return bool
+     * @throws HttpException
+     */
+    public function getCard($card_id)
+    {
+        if (empty($card_id)) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_GET_CARD_URL . 'access_token=' . $this->getAccessToken(), [
+            'card_id' => $card_id
+        ]);
+        return isset($result['card']) ? $result['card'] : false;
+    }
+
+    /**
+     * 更新卡券信息
+     * @param $requestParams
+     * @return array|bool
+     * @throws HttpException
+     */
+    public function updateCard($requestParams)
+    {
+        if (empty($requestParams)) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_UPDATE_CARD_URL . 'access_token=' . $this->getAccessToken(), $requestParams);
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? $result : false;
+    }
+
+    /**
+     * 修改卡券的库存
+     * @param $card_id 卡券id
+     * @param int $increase_stock_value 增加库存值
+     * @param int $reduce_stock_value 减少库存值
+     * @return bool
+     * @throws HttpException
+     */
+    public function modifyCardStock($card_id, $increase_stock_value = 0, $reduce_stock_value = 0)
+    {
+        if (empty($card_id)) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_MODIFY_CARD_STOCK . 'access_token=' . $this->getAccessToken(), [
+            'card_id' => $card_id,
+            'increase_stock_value' => $increase_stock_value,
+            'reduce_stock_value' => $reduce_stock_value
+        ]);
+
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
+    }
+
+    /**
+     * 得到批量查询的卡券(获取卡券列表)
+     * @param int $offset 起始偏移量
+     * @param int $count 需要查询的卡片的数量(数量最大 50)
+     * @return bool
+     * @throws HttpException
+     */
+    public function getBatchCards($offset = 0, $count = 50)
+    {
+        $result = $this->httpPost(static::WECHAT_GET_BATCH_CARD_URL . 'access_token=' . $this->getAccessToken(), [
+            'offset' => $offset,
+            'count' => $count
+        ]);
+
+        return isset($result['card_id_list']) ? $result['card_id_list'] : false;
+    }
+
+    /**
+     * 获取卡券颜色列表
+     * @return bool
+     * @throws HttpException
+     */
+    public function getCardColors()
+    {
+        $result = $this->httpGet(static::WECHAT_GET_CARD_COLORS_URL . 'access_token=' . $this->getAccessToken());
+        return isset($result['colors']) ? $result['colors'] : false;
+    }
+
+    /**
+     * 删除卡券
+     * @param $card_id
+     * @return bool
+     * @throws HttpException
+     */
+    public function deleteCard($card_id)
+    {
+        if (empty($card_id)) {
+            return false;
+        }
+
+        $result = $this->httpPost(static::WECHAT_DELETE_CARD_URL . 'access_token=' . $this->getAccessToken(), [
+            'card_id' => $card_id
+        ]);
+
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
+    }
+
+    /**
+     * 激活/绑定会员卡
+     * @param array $requestParams
+     * $requestParams = [
+     *      "init_bonus" => 100,  初始积分不填为0
+     *      "init_balance" => 200, 初始余额不填为0
+     *      "bonus_url" => 'www.xxxx.com', 积分查询
+     *      "balance_url" => 'www.xxxx.com', 余额查询
+     *      "membership_number" => "AAA00000001", 会员卡编号
+     *      "code" => "12312313", 创建会员时获得的Code
+     *      "card_id" => "xxxx_card_id" 卡券id
+     * ]
+     * @return bool
+     * @throws HttpException
+     */
+    public function activateMemberCard($requestParams = [])
+    {
+        if (!isset($requestParams['membership_number']) || !isset($requestParams['code'])) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_MEMBERCARD_ACTIVATE_URL . 'access_token=' . $this->getAccessToken(),
+                    $requestParams
+            );
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
+    }
+
+    /**
+     * 更新用户信息
+     * @param array $requestParams
+     * $requestParams = [
+     *      'code' => '12312313', 要消耗的序列号
+     *      'card_id' => 'p1Pj9jr90', 要消耗序列的所属卡券ID
+     *      'record_bonus' => '消费30元,获得3积分', 商家自定义积分记录
+     *      'add_bonus' => 3, 需要变更的积分
+     *      'add_balance' =>  -3000, 要变更的余额
+     *      'record_balance' => '购买焦糖玛琪朵一杯,扣除金额30元' 商家自定义金额记录
+     * ]
+     * @return array|bool
+     * @throws HttpException
+     */
+    public function updateUser($requestParams = [])
+    {
+        if (!isset($requestParams['code'])) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_MEMBERCARD_UPDATEUSER_URL . 'access_token=' . $this->getAccessToken(),
+                    $requestParams
+            );
+        if (isset($result['errmsg']) && $result['errmsg'] === 'ok') {
+            return [
+                'result_bonus' => $result['result_bonus'], //当前用户积分总额
+                'result_balance' => $result['result_balance'], //当前用户预存总金额
+                'openid' => $result['openid'] //用户openid
+            ];
+        }
+        return false;
+    }
+
+    
+    //===============门店部分==============
+
+    /**
+     * 创建门店
+     * @param array $requestParams
+     * $requestParams = [
+     *      'business' => [
+     *          'base_info' => [
+     *              'sid' => '33788392', 商户自己的门店ID,
+     *              'business_name' => '麦当劳', 门店名称
+     *              'branch_name' => '艺苑路店', 分店名称
+     *              'province' => '广东省',门店所在省份
+     *              'city' => '广州市', 门店所在城市
+     *              'district' => '天河区', 门店所在地区
+     *              'address' => '天河北路xx号', 门店详细街道地址
+     *              'telephone' => '020-12008888', 门店电话
+     *              'categories' => ["美食", "快餐", "小吃"], 门店类型
+     *              'offset_type' => 1,坐标类型
+     *              'longitude' => '115.32375',门店所在地理位置经度
+     *              'latitude' => '25.097486', 门店所在地理位置纬度
+     *              'photo_list' => [
+     *                  ['photo_url' => 'www.xx.com'],
+     *                  ['photo_url' => 'www.xx.com']
+     *              ]
+     *              'recommend' => '麦辣鸡腿堡套餐,麦乐鸡,全家桶', 推荐品
+     *              'special' => '免费 wifi,外卖服务', 特色服务
+     *              'introduction' => '麦当劳是全球大型跨国连锁餐厅...', 商户简介
+     *              'open_time' => '8:00-20:00', 营业时间
+     *              'avg_price' => 35, 人均消费
+     *          ]
+     *      ]
+     * ]
+     * @return bool
+     * @throws HttpException
+     */
+    public function addPoi($requestParams = [])
+    {
+        if (!isset($requestParams['business']['base_info'])) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_ADD_POI_URL . 'access_token=' . $this->getAccessToken(), $requestParams);
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
+    }
+
+    /**
+     * 查询门店
+     * @param $poi_id
+     * @return bool
+     * @throws HttpException
+     */
+    public function getPoi($poi_id)
+    {
+        if (empty($poi_id)) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_GET_POI_URL . 'access_token=' . $this->getAccessToken(), [
+            'poi_id' => $poi_id
+        ]);
+        return isset($result['business']) ? $result['business'] : false;
+    }
+
+    /**
+     * 查询门店列表
+     * @param int $begin
+     * @param int $limit
+     * @return bool
+     * @throws HttpException
+     */
+    public function getPoiList($begin = 0, $limit = 20)
+    {
+        $result = $this->httpPost(static::WECHAT_GET_POI_LIST_URL . 'access_token=' . $this->getAccessToken(), [
+            'begin' => $begin,
+            'limit' => $limit
+        ]);
+        return isset($result['business_list']) ? $result['business_list'] : false;
+    }
+
+    /**
+     * 删除门店
+     * @param $poi_id
+     * @return bool
+     * @throws HttpException
+     */
+    public function deletePoi($poi_id)
+    {
+        if (empty($poi_id)) {
+            return false;
+        }
+
+        $result = $this->httpRaw(static::WECHAT_DEL_POI_URL . 'access_token=' . $this->getAccessToken(), [
+            'poi_id' => $poi_id
+        ]);
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
+    }
+
+    /**
+     * @param $requestParams
+     * $requestParams = [
+     *      'business' => [
+     *          'base_info' => [
+     *              'poi_id' => '271864249', 商户自己的门店ID,
+     *              'telephone' => '020-12008888', 门店电话
+     *              'photo_list' => [
+     *                  ['photo_url' => 'www.xx.com'],
+     *                  ['photo_url' => 'www.xx.com']
+     *              ]
+     *              'recommend' => '麦辣鸡腿堡套餐,麦乐鸡,全家桶', 推荐品
+     *              'special' => '免费 wifi,外卖服务', 特色服务
+     *              'introduction' => '麦当劳是全球大型跨国连锁餐厅...', 商户简介
+     *              'open_time' => '8:00-20:00', 营业时间
+     *              'avg_price' => 35, 人均消费
+     *          ]
+     *      ]
+     * ]
+     * @return bool
+     * @throws HttpException
+     */
+    public function updatePoi($requestParams)
+    {
+        if (!isset($requestParams['business']['base_info'])) {
+            return false;
+        }
+        $result = $this->httpPost(static::WECHAT_ADD_POI_URL . 'access_token=' . $this->getAccessToken(), $requestParams);
+        return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
+    }
+    //===================卡券部分 EOF===========================
 
     /**
      * 缓存微信数据
