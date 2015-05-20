@@ -1907,6 +1907,28 @@ class Wechat extends Component
     }
 
     //=======================卡券部分=========================
+
+    /**
+     * 上传门店LOGO
+     * 门店不同于(微店)门店是线下消费场所
+     * @param $filePath 文件完整路径
+     * @return bool
+     */
+    public function uploadStoreLogo($filePath)
+    {
+        $filePath = realpath($filePath);
+        if (!file_exists($filePath)) {
+            return false;
+        }
+
+        $result = $this->httpPost(self::WECHAT_MEDIA_IMG_UPLOAD_URL .
+            'access_token=' . $this->getAccessToken() , [
+            'buffer' => class_exists('\CURLFile') ? new \CURLFile($filePath) : '@' . $filePath
+        ]);
+
+        return isset($result['url']) ? $result['url'] : false;
+    }
+
     /**
      * 得到Code信息
      * @param $code
