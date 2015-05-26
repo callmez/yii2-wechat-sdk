@@ -1907,7 +1907,7 @@ class Wechat extends Component
     }
 
     //=======================卡券部分=========================
-
+    
     /**
      * 上传门店LOGO
      * 门店不同于(微店)门店是线下消费场所
@@ -1920,6 +1920,7 @@ class Wechat extends Component
         if (!file_exists($filePath)) {
             return false;
         }
+        $buffer = class_exists('\CURLFile') ? new \CURLFile($filePath) : '@' . $filePath;
 
         $result = $this->httpPost(self::WECHAT_MEDIA_IMG_UPLOAD_URL .
             'access_token=' . $this->getAccessToken() , [
@@ -2000,7 +2001,7 @@ class Wechat extends Component
         if (empty($code)) {
             return false;
         }
-        $result = $this->httpPost(static::WECHAT_SET_CARD_CODE_UNAVAILABLE_URL . 'access_token=' . $this->getAccessToken(), [
+        $result = $this->httpRaw(static::WECHAT_SET_CARD_CODE_UNAVAILABLE_URL . 'access_token=' . $this->getAccessToken(), [
             'code' => $code,
             empty($card_id) && 'card_id' => $card_id
         ]);
@@ -2016,11 +2017,10 @@ class Wechat extends Component
      */
     public function cardConsume($code, $cardId = null)
     {
-        $result = $this->httpPost(static::WECHAT_CARD_CONSUME_URL . 'access_token=' . $this->getAccessToken(), [
+        $result = $this->httpRaw(static::WECHAT_CARD_CONSUME_URL . 'access_token=' . $this->getAccessToken(), [
             'code' => $code,
             'card_id' => $cardId
         ]);
-
         if (isset($result['errmsg']) && $result['errmsg'] === 'ok') {
             return ['card_id' => $result['card']['card_id'], 'openid' => $result['openid']];
         }
@@ -2047,8 +2047,15 @@ class Wechat extends Component
         if (!isset($requestParams['card_id'])) {
             return false;
         }
-        $result = $this->httpPost(static::WECHAT_CARD_QRCODE_CREATE_URL . 'access_token=' . $this->getAccessToken(),
-                    $requestParams
+
+        $qrData = [
+            'action_name' => 'QR_CARD',
+            'action_info' => [
+                'card' => $requestParams,
+            ]
+        ];
+        $result = $this->httpRaw(static::WECHAT_CARD_QRCODE_CREATE_URL . 'access_token=' . $this->getAccessToken(),
+                    Json::encode($qrData)
             );
 
         return isset($result['ticket']) ? $result['ticket'] : false;
@@ -2066,7 +2073,8 @@ class Wechat extends Component
             return false;
         }
 
-        $result = $this->httpPost(static::WECHAT_CREATE_CARD_URL . 'access_token=' . $this->getAccessToken(), $requestParams);
+        $result = $this->httpRaw(static::WECHAT_CREATE_CARD_URL . 'access_token=' . $this->getAccessToken(), Json::encode($requestParams));
+        var_dump($result);
         return isset($result['card_id']) ? $result['card_id'] : false;
     }
 
@@ -2081,9 +2089,10 @@ class Wechat extends Component
         if (empty($card_id)) {
             return false;
         }
-        $result = $this->httpPost(static::WECHAT_GET_CARD_URL . 'access_token=' . $this->getAccessToken(), [
+        $result = $this->httpRaw(static::WECHAT_GET_CARD_URL . 'access_token=' . $this->getAccessToken(), Json::encode([
             'card_id' => $card_id
-        ]);
+        ]));
+
         return isset($result['card']) ? $result['card'] : false;
     }
 
@@ -2229,7 +2238,7 @@ class Wechat extends Component
         return false;
     }
 
-    
+
     //===============门店部分==============
 
     /**
@@ -2285,9 +2294,9 @@ class Wechat extends Component
         if (empty($poi_id)) {
             return false;
         }
-        $result = $this->httpPost(static::WECHAT_GET_POI_URL . 'access_token=' . $this->getAccessToken(), [
-            'poi_id' => $poi_id
-        ]);
+        $raw = Json::encode(['poi_id'=>$poi_id]);
+        $result = $this->httpRaw(static::WECHAT_GET_POI_URL . 'access_token=' . $this->getAccessToken(), $raw);
+
         return isset($result['business']) ? $result['business'] : false;
     }
 
@@ -2300,10 +2309,12 @@ class Wechat extends Component
      */
     public function getPoiList($begin = 0, $limit = 20)
     {
-        $result = $this->httpPost(static::WECHAT_GET_POI_LIST_URL . 'access_token=' . $this->getAccessToken(), [
+        $raw = Json::encode([
             'begin' => $begin,
             'limit' => $limit
         ]);
+        $result = $this->httpRaw(static::WECHAT_GET_POI_LIST_URL . 'access_token=' . $this->getAccessToken(), $raw);
+
         return isset($result['business_list']) ? $result['business_list'] : false;
     }
 
@@ -2318,10 +2329,10 @@ class Wechat extends Component
         if (empty($poi_id)) {
             return false;
         }
+        $raw = Json::encode(['poi_id'=>$poi_id]);
 
-        $result = $this->httpRaw(static::WECHAT_DEL_POI_URL . 'access_token=' . $this->getAccessToken(), [
-            'poi_id' => $poi_id
-        ]);
+        $result = $this->httpRaw(static::WECHAT_DEL_POI_URL . 'access_token=' . $this->getAccessToken(), $raw);
+
         return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
     }
 
@@ -2352,7 +2363,8 @@ class Wechat extends Component
         if (!isset($requestParams['business']['base_info'])) {
             return false;
         }
-        $result = $this->httpPost(static::WECHAT_ADD_POI_URL . 'access_token=' . $this->getAccessToken(), $requestParams);
+        $result = $this->httpRaw(static::WECHAT_UPDATE_POI_URL . 'access_token=' . $this->getAccessToken(), Json::encode($requestParams));
+
         return isset($result['errmsg']) && $result['errmsg'] === 'ok' ? true : false;
     }
     //===================卡券部分 EOF===========================
