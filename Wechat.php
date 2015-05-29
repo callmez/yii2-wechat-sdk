@@ -833,7 +833,7 @@ class Wechat extends Component
                     'data' => $data
                 ];
 
-        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(), $data);
+        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(), $requestParams);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok' ? $result['msgid'] : false;
     }
 
