@@ -46,7 +46,7 @@ class Wechat extends Component
     /**
      * 发送模板消息
      */
-    const WECHAT_TEMPLATE_MESSAGE_SEND_URL = '/message/template/send?';
+    const WECHAT_TEMPLATE_MESSAGE_SEND_URL = '/cgi-bin/message/template/send?';
     /**
      * 消息上传
      */
@@ -783,6 +783,36 @@ class Wechat extends Component
 
     /**
      * 发送模板消息给关注者
+     * 示例数据
+     * [
+     *   "touser" => "接收消息的用户openid",
+     *   "template_id" => "模板id",
+     *   "url" => "http://weixin.qq.com/download",
+     *   "topcolor" => "#FF0000",
+     *   "data" => [
+     *       "first" => [
+     *           "value" => "恭喜你购买成功！",
+     *           "color" => "#173177"
+     *       ],
+     *       "product" => [
+     *           "value" => "巧克力",
+     *           "color" => "#173177"
+     *       ],
+     *       "price" => [
+     *           "value" => "39.8元",
+     *           "color" => "#173177"
+     *       ],
+     *       "time" => [
+     *           "value" => "2014年9月16日",
+     *           "color" => "#173177"
+     *       ],
+     *       "remark" => [
+     *           "value" => "欢迎再次购买！",
+     *           "color" => "#173177"
+     *       ]
+     *   ]
+     *
+     *   ]
      * @param $toUser 关注者openID
      * @param $templateId 模板ID(模板需在公众平台模板消息中挑选)
      * @param array $data 模板需要的数据
@@ -790,10 +820,19 @@ class Wechat extends Component
      */
     public function sendTemplateMessage($toUser, $templateId, array $data)
     {
-        $data = [
-            'url' => null,
-            'topcolor' => '#FF0000'
-        ] + $data;
+
+        if (empty($data)) {
+            return false;
+        }
+
+        $requestParams = [
+                    'touser' => $toUser,
+                    'template_id' => $templateId,
+                    'url' => null,
+                    'topcolor' => '#FF0000',
+                    'data' => $data
+                ];
+
         $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_URL . 'access_token=' . $this->getAccessToken(), $data);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok' ? $result['msgid'] : false;
     }
