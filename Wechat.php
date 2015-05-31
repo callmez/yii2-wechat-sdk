@@ -1792,7 +1792,7 @@ class Wechat extends Component
     {
         $result = $this->httpRaw(self::WECHAT_SHOP_DELIVERY_TEMPLATE_LIST_GET_URL .
             'access_token=' . $this->getAccessToken());
-        return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['template_info'] : false;
+        return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['templates_info'] : false;
     }
 
     /**
