@@ -40,6 +40,10 @@ class Wechat extends Component
      */
     const WECHAT_MENU_GET_URL = '/cgi-bin/menu/get?';
     /**
+     * 删除菜单
+     */
+    const WECHAT_MENU_DELETE_URL = '/cgi-bin/menu/delete';
+    /**
      * 发送客服消息
      */
     const WECHAT_CUSTOM_MESSAGE_SEND_URL = '/cgi-bin/message/custom/send?';
@@ -1574,7 +1578,7 @@ class Wechat extends Component
         $result = $this->httpRaw(self::WECHAT_SHOP_PRODUCT_STOCK_ADD_URL . 'access_token=' . $this->getAccessToken(), [
             'product_id' => $productId,
             'quantity' => $quantity,
-            'sku_info' => $skuInfo === nulll ? $skuInfo : implode(':', $skuInfo)
+            'sku_info' => $skuInfo === null ? $skuInfo : implode(':', $skuInfo)
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success';
     }
