@@ -184,7 +184,7 @@ class MpWechat extends BaseWechat
      */
     public function addCustomServeiceAccount(array $account)
     {
-        $result = $this->httpRaw(self::WECHAT_CUSTOM_MESSAGE_SEND_PREFIX, $account, [
+        $result = $this->httpRaw(self::WECHAT_CUSTOM_SERVICE_ACCOUNT_ADD_PREFIX, $account, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
@@ -202,7 +202,7 @@ class MpWechat extends BaseWechat
      */
     public function updateCustomServeiceAccount(array $account)
     {
-        $result = $this->httpRaw(self::WECHAT_CUSTOM_MESSAGE_UPDATE_PREFIX, $account, [
+        $result = $this->httpRaw(self::WECHAT_CUSTOM_SERVICE_ACCOUNT_UPDATE_PREFIX, $account, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
@@ -220,7 +220,7 @@ class MpWechat extends BaseWechat
      */
     public function deleteCustomServeiceAccount(array $account)
     {
-        $result = $this->httpRaw(self::WECHAT_CUSTOM_MESSAGE_DELETE_PREFIX, $account, [
+        $result = $this->httpRaw(self::WECHAT_CUSTOM_SERVICE_ACCOUNT_DELETE_PREFIX, $account, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
@@ -309,7 +309,7 @@ class MpWechat extends BaseWechat
      */
     public function uploadArticles(array $articles)
     {
-        $result = $this->httpRaw(self::WECHAT_ARTICLES_UPLOAD_URL, [
+        $result = $this->httpRaw(self::WECHAT_ARTICLES_UPLOAD_PREFIX, [
             'articles' => $articles
         ], [
             'access_token' => $this->getAccessToken()
@@ -461,7 +461,7 @@ class MpWechat extends BaseWechat
      */
     public function sendTemplateMessage(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_URL, [
+        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_PREFIX, [
             'url' => null,
             'topcolor' => '#FF0000'
         ] + $data, [
@@ -772,7 +772,7 @@ class MpWechat extends BaseWechat
      */
     public function updateMmembersGroup(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_MEMBER_GROUP_UPDATE_PREFIX, $data, [
+        $result = $this->httpRaw(self::WECHAT_MEMBERS_GROUP_UPDATE_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
@@ -790,7 +790,7 @@ class MpWechat extends BaseWechat
      */
     public function deletGroup($gorupId)
     {
-        $result = $this->httpRaw(self::WECHAT_MEMBER_GROUP_UPDATE_PREFIX, [
+        $result = $this->httpRaw(self::WECHAT_GROUP_DELETE_PREFIX, [
             'group' => [
                 'id' => $gorupId
             ]
@@ -961,7 +961,7 @@ class MpWechat extends BaseWechat
      */
     public function checkOauth2AccessToken($accessToken, $openId)
     {
-        $result = $this->httpGet(self::WECHAT_SNS_AUTH_URL, [
+        $result = $this->httpGet(self::WECHAT_SNS_AUTH_PREFIX, [
             'access_token' => $accessToken,
             'openid' => $openId
         ]);
@@ -1510,102 +1510,12 @@ class MpWechat extends BaseWechat
     /**
      * 增加商品
      * @param array $data 商品详细信息
-     * ~~~
-     * $data = [
-     *     'product_base' => [
-     *         'category_id' => [537074298],
-     *         'property' => [
-     *             [
-     *                 'id' => 1075741879,
-     *                 'vid' => 1079749967
-     *             ],
-     *             [
-     *                 'id' => 1075754127,
-     *                 'vid' => 1079795198
-     *            ],
-     *             [
-     *                 'id' => 1075777334,
-     *                 'vid' => 1079837440
-     *             ]
-     *         ],
-     *         'name' => 'testaddproduct',
-     *         'sku_info' => [
-     *             [
-     *                 'id' => 1075741873,
-     *                'vid' => [1079742386, 1079742363]
-     *             ]
-     *         ],
-     *         'main_img' => 'http://mmbiz.qpic.cn/mmbiz/4whpV1VZl2iccsvYbHvnphkyGtnvjD3ulEKogfsiaua49pvLfUS8Ym0GSYjViaLic0FD3vN0V8PILcibEGb2fPfEOmw/0',
-     *         'img' => ['http://mmbiz.qpic.cn/mmbiz/4whpV1VZl2iccsvYbHvnphkyGtnvjD3ulEKogfsiaua49pvLfUS8Ym0GSYjViaLic0FD3vN0V8PILcibEGb2fPfEOmw/0'],
-     *         'detail' => [
-     *             [
-     *                'text' => 'test first'
-     *             ],
-     *             [
-     *                'img' => 'http://mmbiz.qpic.cn/mmbiz/4whpV1VZl2iccsvYbHvnphkyGtnvjD3ul1UcLcwxrFdwTKYhH9Q5YZoCfX4Ncx655ZK6ibnlibCCErbKQtReySaVA/0'
-     *            ],
-     *            [
-     *                'text' => 'test again'
-     *             ]
-     *         ],
-     *         'buy_limit' => 10
-     *     ],
-     *     'sku_list' => [
-     *         [
-     *             'sku_id' => '1075741873:1079742386',
-     *             'price' => 30,
-     *             'icon_url' => 'http://mmbiz.qpic.cn/mmbiz/4whpV1VZl28bJj62XgfHPibY3ORKicN1oJ4CcoIr4BMbfA8LqyyjzOZzqrOGz3f5KWq1QGP3fo6TOTSYD3TBQjuw/0',
-     *             'product_code' => 'testing',
-     *             'ori_price' => 9000000,
-     *             'quantity' => 800
-     *         ],
-     *         [
-     *             'sku_id' => '1075741873:1079742363',
-     *             'price' => 30,
-     *             'icon_url' => 'http://mmbiz.qpic.cn/mmbiz/4whpV1VZl28bJj62XgfHPibY3ORKicN1oJ4CcoIr4BMbfA8LqyyjzOZzqrOGz3f5KWq1QGP3fo6TOTSYD3TBQjuw/0',
-     *             'product_code' => 'testingtesting',
-     *             'ori_price' => 9000000,
-     *             'quantity' => 800,
-     *         ]
-     *     ],
-     *     'attrext' => [
-     *         'location' => [
-     *             'country' => '中国',
-     *             'province' => '广东省',
-     *             'city' => '广州市',
-     *             'address' => 'T.I.T创意园',
-     *         ],
-     *         'isPostFree' => 0,
-     *         'isHasReceipt' => 1,
-     *         'isUnderGuaranty' => 0,
-     *         'isSupportReplace' => 0,
-     *     ],
-     *     'delivery_info' => [
-     *         'delivery_type' => 0,
-     *         'template_id' => 0,
-     *         'express' => [
-     *             [
-     *                 'id' => 10000027,
-     *                 'price' => 100,
-     *             ],
-     *             [
-     *                 'id' => 10000028,
-     *                 'price' => 100
-     *             ],
-     *             '2' => [
-     *                 'id' => 10000029,
-     *                 'price' => 100
-     *             ]
-     *         ]
-     *     ]
-     * ];
-     * ~~~
      * @return array|bool
      * @throws \yii\web\HttpException
      */
     public function createProduct(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_PRODUCT_CREATE_URL, $data, [
+        $result = $this->httpRaw(self::WECHAT_SHOP_PRODUCT_CREATE_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['product_id'] : false;
@@ -1671,12 +1581,16 @@ class MpWechat extends BaseWechat
 
     /**
      * 获取指定状态的商品
+     */
+    const WECHAT_SHOP_STATUS_PRODUCT_GET_PREFIX = '/merchant/getbystatus';
+    /**
+     * 获取指定状态的商品
      * @param $status 商品状态(0-全部, 1-上架, 2-下架)
      * @return array|bool
      */
     public function getProductByStatus($status)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_STATUS_PRODUCT_GET_URL, [
+        $result = $this->httpRaw(self::WECHAT_SHOP_STATUS_PRODUCT_GET_PREFIX, [
             'status' => $status
         ], [
             'access_token' => $this->getAccessToken()
@@ -1704,12 +1618,17 @@ class MpWechat extends BaseWechat
 
     /**
      * 获取指定分类的所有子分类
-     * @param $catId 分类ID
-     * @return array|bool
+     */
+    const WECHAT_SHOP_CATEGORY_SUB_GET_PREFIX = '/merchant/category/getsub';
+    /**
+     * 获取指定分类的所有子分类
+     * @param $cateId
+     * @return bool
+     * @throws \yii\web\HttpException
      */
     public function getCategorySubCategory($cateId)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_CATEGORY_SUB_GET_URL, [
+        $result = $this->httpRaw(self::WECHAT_SHOP_CATEGORY_SUB_GET_PREFIX, [
             'cate_id' => $cateId
         ], [
             'access_token' => $this->getAccessToken()
@@ -1887,14 +1806,14 @@ class MpWechat extends BaseWechat
      */
     const WECHAT_SHOP_GROUP_ADD_PREFIX = '/merchant/group/add';
     /**
-     * 增加店铺分组
+     * 增加分组
      * @param array $groupDetail
      * @return bool
      * @throws \yii\web\HttpException
      */
     public function addShopGroup(array $groupDetail)
     {
-        $result = $this->httpRaw(self::WECHAT_SHOP_GROUP_ADD_URL, [
+        $result = $this->httpRaw(self::WECHAT_SHOP_GROUP_ADD_PREFIX, [
             'group_detail' => $groupDetail
         ], [
             'access_token' => $this->getAccessToken()
@@ -2181,6 +2100,10 @@ class MpWechat extends BaseWechat
 
     /**
      * 上传图片(小店接口)
+     */
+    const WECHAT_SHOP_IMAGE_UPLOAD_PREFIX = '/merchant/common/upload_img';
+    /**
+     * 上传图片(小店接口)
      * @param $filePath 文件完整路径
      * @param null $fileName 文件名 如不填写.则使用文件路径里的名称
      * @return bool
@@ -2188,7 +2111,7 @@ class MpWechat extends BaseWechat
     public function uploadShopImage($filePath, $fileName = null)
     {
         $fileName === null && $fileName = pathinfo($filePath, PATHINFO_BASENAME);
-        $result = $this->httpRaw(self::WECHAT_SHOP_IMAGE_UPLOAD_URL, [
+        $result = $this->httpRaw(self::WECHAT_SHOP_IMAGE_UPLOAD_PREFIX, [
             'media' => $this->uploadFile($filePath)
         ], [
             'access_token' => $this->getAccessToken(),
@@ -2204,8 +2127,16 @@ class MpWechat extends BaseWechat
     /* =================== 微信智能接口(欢迎PR) =================== */
 
     /* =================== 多客服功能(部分功能实现在[发送消息]区域内) =================== */
-
+    /**
+     * 获取客服聊天记录
+     */
     const WECHAT_CUSTOM_SERVICE_RECORD_GET_PREFIX = '/customservice/msgrecord/getrecord';
+    /**
+     * 获取客服聊天记录
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
     public function getCustomServiceRecord(array $data)
     {
         $result = $this->httpRaw(self::WECHAT_CUSTOM_SERVICE_RECORD_GET_PREFIX, $data, [
@@ -2300,7 +2231,7 @@ class MpWechat extends BaseWechat
      */
     public function addShakeAroundPage(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_DEVICE_LIST_GET_PREFIX, $data, [
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_PAGE_ADD_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
@@ -2336,7 +2267,7 @@ class MpWechat extends BaseWechat
      */
     public function getShakeAroundPageList(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_LIST_GET_PREFIX, $data, [
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_PAGE_LIST_GET_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
@@ -2428,7 +2359,7 @@ class MpWechat extends BaseWechat
      */
     public function getShakeAroundDeviceStatistics(array $data)
     {
-        $result = $this->httpPost(self::WECHAT_SHAKE_AROUND_USER_SHAKE_INFO_GET_PREFIX, $data, [
+        $result = $this->httpPost(self::WECHAT_SHAKE_AROUND_DEVICE_STATISTICS_GET_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
