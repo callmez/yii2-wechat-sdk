@@ -3,6 +3,8 @@ namespace callmez\wechat\sdk;
 
 use Yii;
 use yii\base\InvalidConfigException;
+use callmez\wechat\sdk\components\BaseWechat;
+use callmez\wechat\sdk\components\MessageCrypt;
 
 /**
  * 微信公众号操作SDK
@@ -1793,7 +1795,7 @@ class MpWechat extends BaseWechat
     /**
      * 增加邮费模板
      */
-    const WECHAT_SHOP_DELIVERY_TEMPLATE_ADD_PREFIX = '/merchant/express/add?';
+    const WECHAT_SHOP_DELIVERY_TEMPLATE_ADD_PREFIX = '/merchant/express/add';
     /**
      * @param array $deliveryTemplate
      * @return bool
@@ -1812,7 +1814,7 @@ class MpWechat extends BaseWechat
     /**
      * 删除邮费模板
      */
-    const WECHAT_SHOP_DELIVERY_TEMPLATE_DELETE_PREFIX = '/merchant/express/del?';
+    const WECHAT_SHOP_DELIVERY_TEMPLATE_DELETE_PREFIX = '/merchant/express/del';
     /**
      * 删除邮费模板
      * @param int $templateId 邮费模板ID
@@ -1831,7 +1833,7 @@ class MpWechat extends BaseWechat
     /**
      * 修改邮费模板
      */
-    const WECHAT_SHOP_DELIVERY_TEMPLATE_UPDATE_PREFIX = '/merchant/express/update?';
+    const WECHAT_SHOP_DELIVERY_TEMPLATE_UPDATE_PREFIX = '/merchant/express/update';
     /**
      * 修改邮费模板
      * @param array $data
@@ -1849,7 +1851,7 @@ class MpWechat extends BaseWechat
     /**
      * 获取指定ID的邮费模板
      */
-    const WECHAT_SHOP_DELIVERY_TEMPLATE_ID_GET_PREFIX = '/merchant/express/getbyid?';
+    const WECHAT_SHOP_DELIVERY_TEMPLATE_ID_GET_PREFIX = '/merchant/express/getbyid';
     /**
      * 获取指定ID的邮费模板
      * @param $templateId
@@ -1903,7 +1905,7 @@ class MpWechat extends BaseWechat
     /**
      * 删除分组
      */
-    const WECHAT_SHOP_GROUP_DELETE_PREFIX = '/merchant/group/del?';
+    const WECHAT_SHOP_GROUP_DELETE_PREFIX = '/merchant/group/del';
     /**
      * 删除店铺分组
      * @param $groupId
@@ -2087,7 +2089,7 @@ class MpWechat extends BaseWechat
     /**
      * 根据订单ID获取订单详情
      */
-    const WECHAT_SHOP_ORDER_GET_PREFIX = '/merchant/order/getbyid?';
+    const WECHAT_SHOP_ORDER_GET_PREFIX = '/merchant/order/getbyid';
     /**
      * 根据订单ID获取订单详情
      * @param $orderId
@@ -2186,8 +2188,12 @@ class MpWechat extends BaseWechat
     public function uploadShopImage($filePath, $fileName = null)
     {
         $fileName === null && $fileName = pathinfo($filePath, PATHINFO_BASENAME);
-        $result = $this->httpRaw(self::WECHAT_SHOP_IMAGE_UPLOAD_URL .
-            'access_token=' . $this->getAccessToken() . '&filename=' . $fileName, file_get_contents($filePath));
+        $result = $this->httpRaw(self::WECHAT_SHOP_IMAGE_UPLOAD_URL, [
+            'media' => $this->uploadFile($filePath)
+        ], [
+            'access_token' => $this->getAccessToken(),
+            'filename' => $fileName
+        ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success' ? $result['image_url'] : false;
     }
 
@@ -2195,9 +2201,254 @@ class MpWechat extends BaseWechat
 
     /* ==== 门店管理(文档V2.2.3) ===== */
 
-    /* =================== 微信智能接口 =================== */
+    /* =================== 微信智能接口(欢迎PR) =================== */
 
-    /* =================== 多客服功能 =================== */
+    /* =================== 多客服功能(部分功能实现在[发送消息]区域内) =================== */
+
+    const WECHAT_CUSTOM_SERVICE_RECORD_GET_PREFIX = '/customservice/msgrecord/getrecord';
+    public function getCustomServiceRecord(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_CUSTOM_SERVICE_RECORD_GET_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['recordlist'] : false;
+    }
 
     /* =================== 摇一摇周边 =================== */
+
+    /**
+     * 申请设备ID
+     */
+    const WECHAT_SHAKE_AROUND_DEVICE_ADD_PREFIX = '/shakearound/device/applyid';
+    /**
+     * 申请设备ID
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function addShakeAroundDevice(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_DEVICE_ADD_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 编辑设备信息
+     */
+    const WECHAT_SHAKE_AROUND_DEVICE_UPDATE_PREFIX = '/shakearound/device/update';
+    /**
+     * 编辑设备信息
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function updateShakeAroundDevice(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_DEVICE_UPDATE_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 编辑设备信息
+     */
+    const WECHAT_SHAKE_AROUND_DEVICE_LOCATION_BIND_PREFIX = '/shakearound/device/bindlocation';
+    /**
+     * 配置设备与门店的关联关系
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function bindShakeAroundDeviceLocation(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_DEVICE_LOCATION_BIND_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 查询设备列表
+     */
+    const WECHAT_SHAKE_AROUND_DEVICE_LIST_GET_PREFIX = '/shakearound/device/search';
+    /**
+     * 查询设备列表
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function getShakeAroundDeviceList(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_DEVICE_LIST_GET_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 新增页面
+     */
+    const WECHAT_SHAKE_AROUND_PAGE_ADD_PREFIX = '/shakearound/page/add';
+    /**
+     * 新增页面
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function addShakeAroundPage(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_DEVICE_LIST_GET_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 编辑页面信息
+     */
+    const WECHAT_SHAKE_AROUND_UPDATE_PREFIX= '/shakearound/page/update';
+    /**
+     * 编辑页面信息
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function updateShakeAroundPage(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_UPDATE_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 查询页面列表
+     */
+    const WECHAT_SHAKE_AROUND_PAGE_LIST_GET_PREFIX = '/shakearound/page/search';
+    /**
+     * 查询页面列表
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function getShakeAroundPageList(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_LIST_GET_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 删除页面
+     */
+    const WECHAT_SHAKE_AROUND_PAGE_DELETE_PREFIX = '/shakearound/page/delete';
+    /**
+     * 删除页面
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function deleteShakeAroundPage(array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_SHAKE_AROUND_PAGE_DELETE_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 上传图片素材
+     */
+    const WECHAT_SHAKE_AROUND_MATERIAL_ADD_PREFIX = '/shakearound/material/add';
+    /**
+     * 上传图片素材
+     * @param $mediaPath
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function addShakeAroundMaterial($mediaPath)
+    {
+        $result = $this->httpPost(self::WECHAT_SHAKE_AROUND_MATERIAL_ADD_PREFIX, [
+            'media' => $this->uploadFile($mediaPath)
+        ], [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 配置设备与页面的关联关系
+     */
+    const WECHAT_SHAKE_AROUND_DEVICE_PAGE_BIND = '/shakearound/device/bindpage';
+    /**
+     * 配置设备与页面的关联关系
+     * 配置设备与页面的关联关系
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function bindShakeAroundDevicePage(array $data)
+    {
+        $result = $this->httpPost(self::WECHAT_SHAKE_AROUND_DEVICE_PAGE_BIND, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 获取摇周边的设备及用户信息
+     */
+    const WECHAT_SHAKE_AROUND_USER_SHAKE_INFO_GET_PREFIX = '/shakearound/user/getshakeinfo';
+    /**
+     * 获取摇周边的设备及用户信息
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function getShakeAroundUserShakeInfo(array $data)
+    {
+        $result = $this->httpPost(self::WECHAT_SHAKE_AROUND_USER_SHAKE_INFO_GET_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 以设备为维度的数据统计接口
+     */
+    const WECHAT_SHAKE_AROUND_DEVICE_STATISTICS_GET_PREFIX = '/shakearound/statistics/device';
+    /**
+     * 以设备为维度的数据统计接口
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function getShakeAroundDeviceStatistics(array $data)
+    {
+        $result = $this->httpPost(self::WECHAT_SHAKE_AROUND_USER_SHAKE_INFO_GET_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
+
+    /**
+     * 以页面为维度的数据统计接口
+     */
+    const WECHAT_SHAKE_AROUND_STATISTICS_PAGE_PREFIX = '/shakearound/statistics/page';
+    /**
+     * 以页面为维度的数据统计接口
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function shakeAroundStatisticsPage(array $data)
+    {
+        $result = $this->httpPost(self::WECHAT_SHAKE_AROUND_STATISTICS_PAGE_PREFIX, $data, [
+            'access_token' => $this->getAccessToken()
+        ]);
+        return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
+    }
 }

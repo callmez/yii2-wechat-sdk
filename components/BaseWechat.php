@@ -1,5 +1,5 @@
 <?php
-namespace callmez\wechat\sdk;
+namespace callmez\wechat\sdk\components;
 
 use Yii;
 use yii\base\Event;

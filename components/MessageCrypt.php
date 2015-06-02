@@ -1,7 +1,7 @@
 <?php
-namespace callmez\wechat\sdk;
+namespace callmez\wechat\sdk\components;
 
-require_once 'lib/wxBizMsgCrypt.php';
+require_once 'messageCrypt/wxBizMsgCrypt.php';
 
 /**
  * 消息加密类
