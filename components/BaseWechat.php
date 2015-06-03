@@ -119,7 +119,7 @@ abstract class BaseWechat extends Component
     abstract public function jsApiConfig(array $config = []);
 
     /**
-     * 获取AccessToken
+     * 获取js api ticket
      * 超时后会自动重新获取JsApiTicket并触发self::EVENT_AFTER_JS_API_TICKET_UPDATE事件
      * @param bool $force 是否强制获取
      * @return mixed

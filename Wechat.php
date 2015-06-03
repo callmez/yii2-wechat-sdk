@@ -300,7 +300,7 @@ class Wechat extends Component
     /**
      * 删除卡券
      */
-    const WECHAT_DELETE_CARD_URL = '/card/delete?';
+    const WECHAT_DELETE_CARD_URL = '/deleteCard?';
     /**
      * 得到批量卡券
      */
