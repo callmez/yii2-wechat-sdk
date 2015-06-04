@@ -1,15 +1,15 @@
 <?php
 namespace callmez\wechat\sdk;
 
-use callmez\wechat\components\mp\ShakeAround;
-use callmez\wechat\sdk\components\mp\Card;
-use callmez\wechat\sdk\components\mp\CustomService;
-use callmez\wechat\sdk\components\mp\DataCube;
-use callmez\wechat\sdk\components\mp\Shop;
 use Yii;
 use yii\base\InvalidConfigException;
 use callmez\wechat\sdk\components\BaseWechat;
 use callmez\wechat\sdk\components\MessageCrypt;
+use callmez\wechat\sdk\components\mp\Card;
+use callmez\wechat\sdk\components\mp\Shop;
+use callmez\wechat\components\mp\ShakeAround;
+use callmez\wechat\sdk\components\mp\DataCube;
+use callmez\wechat\sdk\components\mp\CustomService;
 
 /**
  * 微信公众号操作SDK
@@ -151,9 +151,10 @@ class MpWechat extends BaseWechat
      */
     public function getIp()
     {
-        return $this->httpGet(self::WECHAT_IP_PREFIX, [
+        $result = $this->httpGet(self::WECHAT_IP_PREFIX, [
             'access_token' => $this->getAccessToken()
         ]);
+        return isset($result['ip_list']) ? $result['ip_list'] : false;
     }
 
     /* =================== 接收消息 =================== */
