@@ -191,7 +191,7 @@ class MpWechat extends BaseWechat
      * @return bool
      * @throws \yii\web\HttpException
      */
-    public function sendCustomMessage(array $data)
+    public function sendMessage(array $data)
     {
         $result = $this->httpRaw(self::WECHAT_CUSTOM_MESSAGE_SEND_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
@@ -404,6 +404,7 @@ class MpWechat extends BaseWechat
     }
 
     /* =================== 素材管理 =================== */
+
     /**
      * 新增临时素材(上传临时多媒体文件)
      */
