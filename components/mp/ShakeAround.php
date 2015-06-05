@@ -203,7 +203,7 @@ class ShakeAround extends WechatComponent
      */
     public function getUserShakeInfo(array $data)
     {
-        $result = $this->wechat->httpPost(self::WECHAT_SHAKE_AROUND_USER_SHAKE_INFO_GET_PREFIX, $data, [
+        $result = $this->wechat->httpPost(self::WECHAT_USER_SHAKE_INFO_GET_PREFIX, $data, [
             'access_token' => $this->wechat->getAccessToken()
         ]);
         return isset($result['errcode']) && !$result['errcode'] ? $result['data'] : false;
