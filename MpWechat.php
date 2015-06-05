@@ -707,15 +707,15 @@ class MpWechat extends BaseWechat
     const WECHAT_GROUP_DELETE_PREFIX = '/cgi-bin/groups/delete';
     /**
      * 删除分组
-     * @param $gorupId
+     * @param $groupId
      * @return bool
      * @throws \yii\web\HttpException
      */
-    public function deletGroup($gorupId)
+    public function deletGroup($groupId)
     {
         $result = $this->httpRaw(self::WECHAT_GROUP_DELETE_PREFIX, [
             'group' => [
-                'id' => $gorupId
+                'id' => $groupId
             ]
         ], [
             'access_token' => $this->getAccessToken()
