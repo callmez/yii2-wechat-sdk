@@ -5,9 +5,9 @@ use Yii;
 use yii\base\InvalidConfigException;
 use callmez\wechat\sdk\components\BaseWechat;
 use callmez\wechat\sdk\components\MessageCrypt;
-use callmez\wechat\sdk\components\mp\Card;
-use callmez\wechat\sdk\components\mp\Shop;
-use callmez\wechat\components\mp\ShakeAround;
+use callmez\wechat\sdk\components\Card;
+use callmez\wechat\sdk\components\Shop;
+use callmez\wechat\components\ShakeAround;
 use callmez\wechat\sdk\components\mp\DataCube;
 use callmez\wechat\sdk\components\mp\CustomService;
 
@@ -105,7 +105,13 @@ class MpWechat extends BaseWechat
     public function parseHttpRequest(callable $callable, $url, $postOptions = null, $force = true)
     {
         $result = call_user_func_array($callable, [$url, $postOptions]);
-        if (isset($result['errcode'])) {
+        if (isset($result['errcode']) && $result['errcode']) {
+            $this->lastError = $result;
+            Yii::warning([
+                'url' => $url,
+                'result' => $result,
+                'postOptions' => $postOptions
+            ], __METHOD__);
             switch ($result ['errcode']) {
                 case 40001: //access_token 失效,强制更新access_token, 并更新地址重新执行请求
                     if ($force) {
@@ -622,16 +628,16 @@ class MpWechat extends BaseWechat
     /**
      * 查询用户所在分组
      */
-    const WECHAT_MEMBER_GROUP_ID_GET_PREFIX = '/cgi-bin/groups/getid';
+    const WECHAT_USER_GROUP_ID_GET_PREFIX = '/cgi-bin/groups/getid';
     /**
      * 查询用户所在分组
      * @param $openId
      * @return bool
      * @throws \yii\web\HttpException
      */
-    public function getMemberGroupId($openId)
+    public function getUserGroupId($openId)
     {
-        $result = $this->httpRaw(self::WECHAT_MEMBER_GROUP_ID_GET_PREFIX, [
+        $result = $this->httpRaw(self::WECHAT_USER_GROUP_ID_GET_PREFIX, [
             'openid' => $openId
         ], [
             'access_token' => $this->getAccessToken()
@@ -662,14 +668,14 @@ class MpWechat extends BaseWechat
     /**
      * 移动用户分组
      */
-    const WECHAT_MEMBER_GROUP_UPDATE_PREFIX = '/cgi-bin/groups/members/update';
+    const WECHAT_USER_GROUP_UPDATE_PREFIX = '/cgi-bin/groups/members/update';
     /**
      * 移动用户分组
      * @param array $data
      * @return bool
      * @throws \yii\web\HttpException
      */
-    public function updateMemberGroup(array $data)
+    public function updateUserGroup(array $data)
     {
         $result = $this->httpRaw(self::WECHAT_MEMBER_GROUP_UPDATE_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
@@ -680,16 +686,16 @@ class MpWechat extends BaseWechat
     /**
      * 批量移动用户分组
      */
-    const WECHAT_MEMBERS_GROUP_UPDATE_PREFIX = '/cgi-bin/groups/members/batchupdate';
+    const WECHAT_USERS_GROUP_UPDATE_PREFIX = '/cgi-bin/groups/members/batchupdate';
     /**
      * 批量移动用户分组
      * @param array $data
      * @return bool
      * @throws \yii\web\HttpException
      */
-    public function updateMmembersGroup(array $data)
+    public function updateUsersGroup(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_MEMBERS_GROUP_UPDATE_PREFIX, $data, [
+        $result = $this->httpRaw(self::WECHAT_USERS_GROUP_UPDATE_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
@@ -720,16 +726,16 @@ class MpWechat extends BaseWechat
     /**
      * 设置用户备注名
      */
-    const WEHCAT_MEMBER_MARK_UPDATE = '/cgi-bin/user/info/updateremark';
+    const WEHCAT_USER_MARK_UPDATE = '/cgi-bin/user/info/updateremark';
     /**
      * 设置用户备注名
      * @param array $data
      * @return bool
      * @throws \yii\web\HttpException
      */
-    public function updateMemberMark(array $data)
+    public function updateUserMark(array $data)
     {
-        $result = $this->httpRaw(self::WEHCAT_MEMBER_MARK_UPDATE, $data, [
+        $result = $this->httpRaw(self::WEHCAT_USER_MARK_UPDATE, $data, [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
@@ -738,7 +744,7 @@ class MpWechat extends BaseWechat
     /**
      * 获取用户基本信息(UnionID机制)
      */
-    const WECHAT_MEMBER_INFO_GET = '/cgi-bin/user/info';
+    const WECHAT_USER_INFO_GET = '/cgi-bin/user/info';
     /**
      * 获取用户基本信息(UnionID机制)
      * @param $openId
@@ -746,9 +752,9 @@ class MpWechat extends BaseWechat
      * @return bool|mixed
      * @throws \yii\web\HttpException
      */
-    public function getMemberInfo($openId, $lang = 'zh_CN')
+    public function getUserInfo($openId, $lang = 'zh_CN')
     {
-        $result = $this->httpGet(self::WECHAT_MEMBER_INFO_GET, [
+        $result = $this->httpGet(self::WECHAT_USER_INFO_GET, [
             'access_token' => $this->getAccessToken(),
             'openid' => $openId,
             'lang' => $lang
@@ -759,16 +765,16 @@ class MpWechat extends BaseWechat
     /**
      * 获取用户列表
      */
-    const WECHAT_MEMBER_LIST_GET_PREFIX = '/cgi-bin/user/get';
+    const WECHAT_USER_LIST_GET_PREFIX = '/cgi-bin/user/get';
     /**
      * 获取用户列表
      * @param $nextOpenId
      * @return bool|mixed
      * @throws \yii\web\HttpException
      */
-    public function getMemberList($nextOpenId)
+    public function getUserList($nextOpenId)
     {
-        $result = $this->httpGet(self::WECHAT_MEMBER_LIST_GET_PREFIX, [
+        $result = $this->httpGet(self::WECHAT_USER_LIST_GET_PREFIX, [
             'access_token' => $this->getAccessToken(),
             'next_openid' => $nextOpenId,
         ]);
@@ -848,7 +854,7 @@ class MpWechat extends BaseWechat
     /**
      * 拉取用户信息(需scope为 snsapi_userinfo)
      */
-    const WEHCAT_SNS_MEMBER_INFO_PREFIX = '/sns/userinfo';
+    const WEHCAT_SNS_USER_INFO_PREFIX = '/sns/userinfo';
     /**
      * 拉取用户信息(需scope为 snsapi_userinfo):第四步
      * @param $openId
@@ -856,9 +862,9 @@ class MpWechat extends BaseWechat
      * @param string $lang
      * @return array|bool
      */
-    public function getSnsMemberInfo($openId, $oauth2AccessToken, $lang = 'zh_CN')
+    public function getSnsUserInfo($openId, $oauth2AccessToken, $lang = 'zh_CN')
     {
-        $result = $this->httpGet(self::WEHCAT_SNS_MEMBER_INFO_PREFIX, [
+        $result = $this->httpGet(self::WEHCAT_SNS_USER_INFO_PREFIX, [
             'access_token' => $oauth2AccessToken,
             'openid' => $openId,
             'lang' => $lang

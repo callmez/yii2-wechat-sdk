@@ -41,6 +41,12 @@ abstract class BaseWechat extends Component
     private $_messageCrypt;
 
     /**
+     * 返回错误码
+     * @var array
+     */
+    public $lastError;
+
+    /**
      * 解析微信服务器请求的xml数据
      * @param srting $xml 服务发送的xml数据
      * @return array

@@ -676,4 +676,192 @@ class QyWechat extends BaseWechat
     }
 
     /* =================== 自定义菜单 =================== */
+
+    /**
+     * 创建应用菜单
+     */
+    const WECHAT_MENU_CREATE_PREFIX = '/cgi-bin/menu/create';
+    /**
+     * 创建应用菜单
+     * @param $agentId
+     * @param array $data
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function createMenu($agentId, array $data)
+    {
+        $result = $this->httpRaw(self::WECHAT_MENU_CREATE_PREFIX, $data, [
+            'access_token' => $this->getAccessToken(),
+            'agentid' => $agentId
+        ]);
+        return isset($result['errmsg']) && $result['errmsg'] == 'ok';
+    }
+
+    /**
+     * 删除菜单
+     */
+    const WECHAT_MENU_DELETE_PREFIX = '/cgi-bin/menu/delete';
+    /**
+     * 删除菜单
+     * @param $agentId
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function deleteMenu($agentId)
+    {
+        $result = $this->httpGet(self::WECHAT_MENU_DELETE_PREFIX, [
+            'access_token' => $this->getAccessToken(),
+            'agentid' => $agentId
+        ]);
+        return isset($result['errmsg']) && $result['errmsg'] == 'ok';
+    }
+
+    /**
+     * 获取菜单列表
+     */
+    const WECHAT_MENU_GET_PREFIX = '/cgi-bin/menu/get';
+    /**
+     * 获取菜单列表
+     * @param $agentId
+     * @return bool
+     * @throws \yii\web\HttpException
+     */
+    public function getMenu($agentId)
+    {
+        $result = $this->httpGet(self::WECHAT_MENU_GET_PREFIX, [
+            'access_token' => $this->getAccessToken(),
+            'agentid' => $agentId
+        ]);
+        return isset($result['menu']['button']) ? $result['menu']['button'] : false;
+    }
+
+    /* =================== OAuth2验证接口 =================== */
+
+    /**
+     * 企业获取code
+     */
+    const WECHAT_OAUTH2_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize';
+    /**
+     * 企业获取code:第
+     * 通过此函数生成授权url
+     * @param $redirectUrl 授权后重定向的回调链接地址，请使用urlencode对链接进行处理
+     * @param string $state 重定向后会带上state参数，开发者可以填写a-zA-Z0-9的参数值
+     * @param string $scope 应用授权作用域，snsapi_base （不弹出授权页面，直接跳转，只能获取用户openid），
+     * snsapi_userinfo （弹出授权页面，可通过openid拿到昵称、性别、所在地。并且，即使在未关注的情况下，只要用户授权，也能获取其信息）
+     * @return string
+     */
+    public function getOauth2AuthorizeUrl($redirectUrl, $state = 'authorize', $scope = 'snsapi_base')
+    {
+        return $this->httpBuildQuery(self::WECHAT_OAUTH2_AUTHORIZE_URL, [
+            'appid' => $this->corpId,
+            'redirect_uri' => $redirectUrl,
+            'response_type' => 'code',
+            'scope' => $scope,
+            'state' => $state,
+        ]) . '#wechat_redirect';
+    }
+
+    /**
+     * 根据code获取成员信息
+     */
+    const WECHAT_USER_IFNO_GET_PREFIX = '/cgi-bin/user/getuserinfo';
+    /**
+     * 根据code获取成员信息
+     * @param $agentId
+     * @param $code
+     * @return bool|mixed
+     * @throws \yii\web\HttpException
+     */
+    public function getUserInfo($agentId, $code)
+    {
+        $result = $this->httpGet(self::WECHAT_USER_IFNO_GET_PREFIX, [
+            'access_token' => $this->getAccessToken(),
+            'code' => $code,
+            'agentid' => $agentId
+        ]);
+        return !isset($result['errcode']) ? $result : false;
+    }
+
+    /* =================== 微信JS接口 =================== */
+
+    /**
+     * js api ticket 获取
+     */
+    const WECHAT_JS_API_TICKET_PREFIX = '/cgi-bin/get_jsapi_ticket';
+    /**
+     * 请求服务器jsapi_ticket
+     * @return array
+     */
+    protected function requestJsApiTicket()
+    {
+        return $this->httpGet(self::WECHAT_JS_API_TICKET_PREFIX, [
+            'access_token' => $this->getAccessToken(),
+        ]);
+    }
+
+    /**
+     * 生成js 必需的config
+     * 只需在视图文件输出JS代码:
+     *  wx.config(<?= json_encode($wehcat->jsApiConfig()) ?>); // 默认全权限
+     *  wx.config(<?= json_encode($wehcat->jsApiConfig([ // 只允许使用分享到朋友圈功能
+     *      'jsApiList' => [
+     *          'onMenuShareTimeline'
+     *      ]
+     *  ])) ?>);
+     * @param array $config
+     * @return array
+     * @throws HttpException
+     */
+    public function jsApiConfig(array $config = [])
+    {
+        $data = [
+            'jsapi_ticket' => $this->getJsApiTicket(),
+            'noncestr' => Yii::$app->getSecurity()->generateRandomString(16),
+            'timestamp' => $_SERVER['REQUEST_TIME'],
+            'url' => explode('#', Yii::$app->getRequest()->getAbsoluteUrl())[0]
+        ];
+        return array_merge([
+            'debug' => YII_DEBUG,
+            'appId' => $this->corpId,
+            'timestamp' => $data['timestamp'],
+            'nonceStr' => $data['noncestr'],
+            'signature' => sha1(urldecode(http_build_query($data))),
+            'jsApiList' => [
+                'onMenuShareTimeline',
+                'onMenuShareAppMessage',
+                'onMenuShareQQ',
+                'onMenuShareWeibo',
+                'startRecord',
+                'stopRecord',
+                'onVoiceRecordEnd',
+                'playVoice',
+                'pauseVoice',
+                'stopVoice',
+                'onVoicePlayEnd',
+                'uploadVoice',
+                'downloadVoice',
+                'chooseImage',
+                'previewImage',
+                'uploadImage',
+                'downloadImage',
+                'translateVoice',
+                'getNetworkType',
+                'openLocation',
+                'getLocation',
+                'hideOptionMenu',
+                'showOptionMenu',
+                'hideMenuItems',
+                'showMenuItems',
+                'hideAllNonBaseMenuItem',
+                'showAllNonBaseMenuItem',
+                'closeWindow',
+                'scanQRCode'
+            ]
+        ], $config);
+    }
+
+    /* =================== 第三方应用授权 =================== */
+
+
+
 }
