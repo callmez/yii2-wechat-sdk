@@ -3,13 +3,13 @@ namespace callmez\wechat\sdk;
 
 use Yii;
 use yii\base\InvalidConfigException;
+use callmez\wechat\sdk\mp\Card;
+use callmez\wechat\sdk\mp\Shop;
+use callmez\wechat\sdk\mp\ShakeAround;
+use callmez\wechat\sdk\mp\DataCube;
+use callmez\wechat\sdk\mp\CustomService;
 use callmez\wechat\sdk\components\BaseWechat;
 use callmez\wechat\sdk\components\MessageCrypt;
-use callmez\wechat\sdk\components\Card;
-use callmez\wechat\sdk\components\Shop;
-use callmez\wechat\components\ShakeAround;
-use callmez\wechat\sdk\components\mp\DataCube;
-use callmez\wechat\sdk\components\mp\CustomService;
 
 /**
  * 微信公众号操作SDK
@@ -124,6 +124,25 @@ class MpWechat extends BaseWechat
             }
         }
         return $result;
+    }
+
+    /**
+     * 解析微信服务器请求的xml数据
+     * @param string $xml 微信请求的信息主题
+     * @param string $messageSignature 加密签名
+     * @param sting $encryptType 加密类型
+     * @return array
+     */
+    public function parseRequestXml($xml = null, $messageSignature = null, $encryptType = null)
+    {
+        $xml === null && $xml = Yii::$app->request->getRawBody();
+        $messageSignature === null && isset($_GET['msg_signature']) && $messageSignature = $_GET['msg_signature'];
+        $encryptType === null && isset($_GET['encrypt_type']) && $encryptType = $_GET['encrypt_type'];
+        $return = [];
+        if (!empty($xml)) {
+            $return = (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+        }
+        return $return;
     }
 
     /* =================== 基础接口 =================== */

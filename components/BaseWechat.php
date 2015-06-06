@@ -47,17 +47,6 @@ abstract class BaseWechat extends Component
     public $lastError;
 
     /**
-     * 解析微信服务器请求的xml数据
-     * @param srting $xml 服务发送的xml数据
-     * @return array
-     */
-    public function parseRequestXml($xml = null)
-    {
-        $xml === null && $xml = Yii::$app->request->getRawBody();
-        return empty($xml) ? [] : (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
-    }
-
-    /**
      * 请求微信服务器获取AccessToken
      * 必须返回以下格式内容
      * [
