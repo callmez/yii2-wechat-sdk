@@ -1,6 +1,9 @@
 <?php
 namespace callmez\wechat\sdk\components;
 
+use DOMDocument;
+use DOMElement;
+use DOMText;
 use Yii;
 use yii\base\Event;
 use yii\base\Component;
@@ -332,5 +335,57 @@ abstract class BaseWechat extends Component
     {
         // php 5.5将抛弃@写法,引用CURLFile类来实现 @see http://segmentfault.com/a/1190000000725185
         return class_exists('\CURLFile') ? new \CURLFile($filePath) : '@' . $filePath;
+    }
+
+    /**
+     * 创建微信格式的XML
+     * @param array $data
+     * @param null $charset
+     * @return string
+     */
+    public function xml(array $data, $charset = null)
+    {
+        $dom = new DOMDocument('1.0', $charset === null ? Yii::$app->charset : $charset);
+        $root = new DOMElement('xml');
+        $dom->appendChild($root);
+        $this->buildXml($root, $data);
+        $xml = $dom->saveXML();
+        return trim(substr($xml, strpos($xml, '?>') + 2));
+    }
+
+    /**
+     * @see yii\web\XmlResponseFormatter::buildXml()
+     */
+    protected function buildXml($element, $data)
+    {
+        if (is_object($data)) {
+            $child = new DOMElement(StringHelper::basename(get_class($data)));
+            $element->appendChild($child);
+            if ($data instanceof Arrayable) {
+                $this->buildXml($child, $data->toArray());
+            } else {
+                $array = [];
+                foreach ($data as $name => $value) {
+                    $array[$name] = $value;
+                }
+                $this->buildXml($child, $array);
+            }
+        } elseif (is_array($data)) {
+            foreach ($data as $name => $value) {
+                if (is_int($name) && is_object($value)) {
+                    $this->buildXml($element, $value);
+                } elseif (is_array($value) || is_object($value)) {
+                    $child = new DOMElement(is_int($name) ? $this->itemTag : $name);
+                    $element->appendChild($child);
+                    $this->buildXml($child, $value);
+                } else {
+                    $child = new DOMElement(is_int($name) ? $this->itemTag : $name);
+                    $element->appendChild($child);
+                    $child->appendChild(new DOMText((string) $value));
+                }
+            }
+        } else {
+            $element->appendChild(new DOMText((string) $data));
+        }
     }
 }
