@@ -66,17 +66,6 @@ class MpWechat extends BaseWechat
     }
 
     /**
-     * 创建消息加密类
-     * @return object
-     */
-    protected function createMessageCrypt()
-    {
-        return Yii::createObject([
-            'class' => MessageCrypt::className(),
-        ], $this->token, $this->encodingAesKey, $this->appId);
-    }
-
-    /**
      * 获取缓存键值
      * @param $name
      * @return string
@@ -127,22 +116,82 @@ class MpWechat extends BaseWechat
     }
 
     /**
-     * 解析微信服务器请求的xml数据
-     * @param string $xml 微信请求的信息主题
-     * @param string $messageSignature 加密签名
-     * @param sting $encryptType 加密类型
+     * 解析微信服务器请求的xml数据, 如果是加密数据直接自动解密
+     * @param string $xml 微信请求的XML信息主体, 默认取$_GET数据
+     * @param string $messageSignature 加密签名, 默认取$_GET数据
+     * @param string $timestamp 加密时间戳, 默认取$_GET数据
+     * @param string $nonce 加密随机串, 默认取$_GET数据
+     * @param string $encryptType 加密类型, 默认取$_GET数据
      * @return array
      */
-    public function parseRequestXml($xml = null, $messageSignature = null, $encryptType = null)
+    public function parseRequestXml($xml = null, $messageSignature = null, $timestamp = null , $nonce = null, $encryptType = null)
     {
         $xml === null && $xml = Yii::$app->request->getRawBody();
-        $messageSignature === null && isset($_GET['msg_signature']) && $messageSignature = $_GET['msg_signature'];
-        $encryptType === null && isset($_GET['encrypt_type']) && $encryptType = $_GET['encrypt_type'];
         $return = [];
         if (!empty($xml)) {
+            $messageSignature === null && isset($_GET['msg_signature']) && $messageSignature = $_GET['msg_signature'];
+            $encryptType === null && isset($_GET['encrypt_type']) && $encryptType = $_GET['encrypt_type'];
+            if ($messageSignature !== null && $encryptType == 'aes') { // 自动解密
+                $timestamp === null && isset($_GET['timestamp']) && $timestamp = $_GET['timestamp'];
+                $nonce === null && isset($_GET['nonce']) && $nonce = $_GET['nonce'];
+                $xml = $this->decryptXml($xml, $messageSignature, $timestamp, $nonce);
+                if ($xml === false) {
+                    return $return;
+                }
+            }
             $return = (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
         }
         return $return;
+    }
+
+    /**
+     * 创建消息加密类
+     * @return object
+     */
+    protected function createMessageCrypt()
+    {
+        return Yii::createObject(MessageCrypt::className(), [$this->token, $this->encodingAesKey, $this->appId]);
+    }
+
+    /**
+     * 加密XML数据
+     * @param string $xml 加密的XML
+     * @param string $timestamp 加密时间戳
+     * @param string $nonce 加密随机串
+     * @return string|bool
+     */
+    public function encryptXml($xml, $timestamp , $nonce)
+    {
+        $errorCode = $this->getMessageCrypt()->encryptMsg($xml, $timestamp, $nonce, $xml);
+        if ($errorCode) {
+            $this->lastError = [
+                'errcode' => $errorCode,
+                'errmsg' => 'XML数据加密失败!'
+            ];
+            return false;
+        }
+        return $xml;
+    }
+
+    /**
+     * 解密XML数据
+     * @param string $xml 解密的XML
+     * @param string $messageSignature 加密签名
+     * @param string $timestamp 加密时间戳
+     * @param string $nonce 加密随机串
+     * @return string|bool
+     */
+    public function decryptXml($xml, $messageSignature, $timestamp , $nonce)
+    {
+        $errorCode = $this->getMessageCrypt()->decryptMsg($messageSignature, $timestamp, $nonce, $xml, $xml);
+        if ($errorCode) {
+            $this->lastError = [
+                'errcode' => $errorCode,
+                'errmsg' => 'XML数据解密失败!'
+            ];
+            return false;
+        }
+        return $xml;
     }
 
     /* =================== 基础接口 =================== */
