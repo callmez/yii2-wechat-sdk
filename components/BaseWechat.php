@@ -198,6 +198,27 @@ abstract class BaseWechat extends Component
     }
 
     /**
+     * 解密XML数据
+     * @param string $xml 解密的XML
+     * @param string $messageSignature 加密签名
+     * @param string $timestamp 加密时间戳
+     * @param string $nonce 加密随机串
+     * @return string|bool
+     */
+    public function decryptXml($xml, $messageSignature, $timestamp , $nonce)
+    {
+        $errorCode = $this->getMessageCrypt()->decryptMsg($messageSignature, $timestamp, $nonce, $xml, $xml);
+        if ($errorCode) {
+            $this->lastError = [
+                'errcode' => $errorCode,
+                'errmsg' => 'XML数据解密失败!'
+            ];
+            return false;
+        }
+        return $xml;
+    }
+
+    /**
      * 创建微信格式的XML
      * @param array $data
      * @param null $charset
@@ -247,27 +268,6 @@ abstract class BaseWechat extends Component
         } else {
             $element->appendChild(new DOMText((string) $data));
         }
-    }
-
-    /**
-     * 解密XML数据
-     * @param string $xml 解密的XML
-     * @param string $messageSignature 加密签名
-     * @param string $timestamp 加密时间戳
-     * @param string $nonce 加密随机串
-     * @return string|bool
-     */
-    public function decryptXml($xml, $messageSignature, $timestamp , $nonce)
-    {
-        $errorCode = $this->getMessageCrypt()->decryptMsg($messageSignature, $timestamp, $nonce, $xml, $xml);
-        if ($errorCode) {
-            $this->lastError = [
-                'errcode' => $errorCode,
-                'errmsg' => 'XML数据解密失败!'
-            ];
-            return false;
-        }
-        return $xml;
     }
 
     /**
