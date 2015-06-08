@@ -816,9 +816,9 @@ class QyWechat extends BaseWechat
     {
         $data = [
             'jsapi_ticket' => $this->getJsApiTicket(),
-            'noncestr' => Yii::$app->getSecurity()->generateRandomString(16),
+            'noncestr' => Yii::$app->security->generateRandomString(16),
             'timestamp' => $_SERVER['REQUEST_TIME'],
-            'url' => explode('#', Yii::$app->getRequest()->getAbsoluteUrl())[0]
+            'url' => explode('#', Yii::$app->request->getAbsoluteUrl())[0]
         ];
         return array_merge([
             'debug' => YII_DEBUG,

@@ -153,47 +153,6 @@ class MpWechat extends BaseWechat
         return Yii::createObject(MessageCrypt::className(), [$this->token, $this->encodingAesKey, $this->appId]);
     }
 
-    /**
-     * 加密XML数据
-     * @param string $xml 加密的XML
-     * @param string $timestamp 加密时间戳
-     * @param string $nonce 加密随机串
-     * @return string|bool
-     */
-    public function encryptXml($xml, $timestamp , $nonce)
-    {
-        $errorCode = $this->getMessageCrypt()->encryptMsg($xml, $timestamp, $nonce, $xml);
-        if ($errorCode) {
-            $this->lastError = [
-                'errcode' => $errorCode,
-                'errmsg' => 'XML数据加密失败!'
-            ];
-            return false;
-        }
-        return $xml;
-    }
-
-    /**
-     * 解密XML数据
-     * @param string $xml 解密的XML
-     * @param string $messageSignature 加密签名
-     * @param string $timestamp 加密时间戳
-     * @param string $nonce 加密随机串
-     * @return string|bool
-     */
-    public function decryptXml($xml, $messageSignature, $timestamp , $nonce)
-    {
-        $errorCode = $this->getMessageCrypt()->decryptMsg($messageSignature, $timestamp, $nonce, $xml, $xml);
-        if ($errorCode) {
-            $this->lastError = [
-                'errcode' => $errorCode,
-                'errmsg' => 'XML数据解密失败!'
-            ];
-            return false;
-        }
-        return $xml;
-    }
-
     /* =================== 基础接口 =================== */
 
     /**
@@ -1153,9 +1112,9 @@ class MpWechat extends BaseWechat
     {
         $data = [
             'jsapi_ticket' => $this->getJsApiTicket(),
-            'noncestr' => Yii::$app->getSecurity()->generateRandomString(16),
+            'noncestr' => Yii::$app->security->generateRandomString(16),
             'timestamp' => $_SERVER['REQUEST_TIME'],
-            'url' => explode('#', Yii::$app->getRequest()->getAbsoluteUrl())[0]
+            'url' => explode('#', Yii::$app->request->getAbsoluteUrl())[0]
         ];
         return array_merge([
             'debug' => YII_DEBUG,

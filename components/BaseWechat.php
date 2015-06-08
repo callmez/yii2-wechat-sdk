@@ -178,6 +178,99 @@ abstract class BaseWechat extends Component
     }
 
     /**
+     * 加密XML数据
+     * @param string $xml 加密的XML
+     * @param string $timestamp 加密时间戳
+     * @param string $nonce 加密随机串
+     * @return string|bool
+     */
+    public function encryptXml($xml, $timestamp , $nonce)
+    {
+        $errorCode = $this->getMessageCrypt()->encryptMsg($xml, $timestamp, $nonce, $xml);
+        if ($errorCode) {
+            $this->lastError = [
+                'errcode' => $errorCode,
+                'errmsg' => 'XML数据加密失败!'
+            ];
+            return false;
+        }
+        return $xml;
+    }
+
+    /**
+     * 创建微信格式的XML
+     * @param array $data
+     * @param null $charset
+     * @return string
+     */
+    public function xml(array $data, $charset = null)
+    {
+        $dom = new DOMDocument('1.0', $charset === null ? Yii::$app->charset : $charset);
+        $root = new DOMElement('xml');
+        $dom->appendChild($root);
+        $this->buildXml($root, $data);
+        $xml = $dom->saveXML();
+        return trim(substr($xml, strpos($xml, '?>') + 2));
+    }
+
+    /**
+     * @see yii\web\XmlResponseFormatter::buildXml()
+     */
+    protected function buildXml($element, $data)
+    {
+        if (is_object($data)) {
+            $child = new DOMElement(StringHelper::basename(get_class($data)));
+            $element->appendChild($child);
+            if ($data instanceof Arrayable) {
+                $this->buildXml($child, $data->toArray());
+            } else {
+                $array = [];
+                foreach ($data as $name => $value) {
+                    $array[$name] = $value;
+                }
+                $this->buildXml($child, $array);
+            }
+        } elseif (is_array($data)) {
+            foreach ($data as $name => $value) {
+                if (is_int($name) && is_object($value)) {
+                    $this->buildXml($element, $value);
+                } elseif (is_array($value) || is_object($value)) {
+                    $child = new DOMElement(is_int($name) ? $this->itemTag : $name);
+                    $element->appendChild($child);
+                    $this->buildXml($child, $value);
+                } else {
+                    $child = new DOMElement(is_int($name) ? $this->itemTag : $name);
+                    $element->appendChild($child);
+                    $child->appendChild(new DOMText((string) $value));
+                }
+            }
+        } else {
+            $element->appendChild(new DOMText((string) $data));
+        }
+    }
+
+    /**
+     * 解密XML数据
+     * @param string $xml 解密的XML
+     * @param string $messageSignature 加密签名
+     * @param string $timestamp 加密时间戳
+     * @param string $nonce 加密随机串
+     * @return string|bool
+     */
+    public function decryptXml($xml, $messageSignature, $timestamp , $nonce)
+    {
+        $errorCode = $this->getMessageCrypt()->decryptMsg($messageSignature, $timestamp, $nonce, $xml, $xml);
+        if ($errorCode) {
+            $this->lastError = [
+                'errcode' => $errorCode,
+                'errmsg' => 'XML数据解密失败!'
+            ];
+            return false;
+        }
+        return $xml;
+    }
+
+    /**
      * 微信数据缓存基本键值
      * @param $name
      * @return string
@@ -194,7 +287,7 @@ abstract class BaseWechat extends Component
     protected function setCache($name, $value, $duration = null)
     {
         $duration === null && $duration = $this->cacheTime;
-        return Yii::$app->getCache()->set($this->getCacheKey($name), $value, $duration);
+        return Yii::$app->cache->set($this->getCacheKey($name), $value, $duration);
     }
 
     /**
@@ -205,7 +298,7 @@ abstract class BaseWechat extends Component
      */
     protected function getCache($name, $defaultValue = null)
     {
-        return Yii::$app->getCache()->get($this->getCacheKey($name), $defaultValue);
+        return Yii::$app->cache->get($this->getCacheKey($name), $defaultValue);
     }
 
     /**
@@ -335,57 +428,5 @@ abstract class BaseWechat extends Component
     {
         // php 5.5将抛弃@写法,引用CURLFile类来实现 @see http://segmentfault.com/a/1190000000725185
         return class_exists('\CURLFile') ? new \CURLFile($filePath) : '@' . $filePath;
-    }
-
-    /**
-     * 创建微信格式的XML
-     * @param array $data
-     * @param null $charset
-     * @return string
-     */
-    public function xml(array $data, $charset = null)
-    {
-        $dom = new DOMDocument('1.0', $charset === null ? Yii::$app->charset : $charset);
-        $root = new DOMElement('xml');
-        $dom->appendChild($root);
-        $this->buildXml($root, $data);
-        $xml = $dom->saveXML();
-        return trim(substr($xml, strpos($xml, '?>') + 2));
-    }
-
-    /**
-     * @see yii\web\XmlResponseFormatter::buildXml()
-     */
-    protected function buildXml($element, $data)
-    {
-        if (is_object($data)) {
-            $child = new DOMElement(StringHelper::basename(get_class($data)));
-            $element->appendChild($child);
-            if ($data instanceof Arrayable) {
-                $this->buildXml($child, $data->toArray());
-            } else {
-                $array = [];
-                foreach ($data as $name => $value) {
-                    $array[$name] = $value;
-                }
-                $this->buildXml($child, $array);
-            }
-        } elseif (is_array($data)) {
-            foreach ($data as $name => $value) {
-                if (is_int($name) && is_object($value)) {
-                    $this->buildXml($element, $value);
-                } elseif (is_array($value) || is_object($value)) {
-                    $child = new DOMElement(is_int($name) ? $this->itemTag : $name);
-                    $element->appendChild($child);
-                    $this->buildXml($child, $value);
-                } else {
-                    $child = new DOMElement(is_int($name) ? $this->itemTag : $name);
-                    $element->appendChild($child);
-                    $child->appendChild(new DOMText((string) $value));
-                }
-            }
-        } else {
-            $element->appendChild(new DOMText((string) $data));
-        }
     }
 }
