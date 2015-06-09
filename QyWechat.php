@@ -49,14 +49,15 @@ class QyWechat extends BaseWechat
     const WECHAT_ACCESS_TOKEN_PREFIX = '/cgi-bin/token';
     /**
      * 请求服务器access_token
-     * @return mixed
+     * @return array|false
      */
     protected function requestAccessToken()
     {
-        return $this->httpGet(self::WECHAT_ACCESS_TOKEN_PREFIX, [
+        $result = $this->httpGet(self::WECHAT_ACCESS_TOKEN_PREFIX, [
             'corpid' => $this->corpId,
             'corpsecret' => $this->secret
         ]);
+        return isset($result['access_token']) ? $result : false;
     }
 
     /**

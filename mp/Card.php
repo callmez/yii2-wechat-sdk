@@ -190,7 +190,7 @@ class Card extends WechatComponent
      */
     private $_jsApiTicket;
     /**
-     * 获取AccessToken
+     * 获取JsApiTicket(添加卡券JS-SDK)
      * 超时后会自动重新获取JsApiTicket并触发self::EVENT_AFTER_JS_API_TICKET_UPDATE事件
      * @param bool $force 是否强制获取
      * @return mixed
@@ -216,7 +216,7 @@ class Card extends WechatComponent
     }
 
     /**
-     * 设置JsApiTicket
+     * 设置JsApiTicket(添加卡券JS-SDK)
      * @param array $jsApiTicket
      */
     public function setJsApiTicket(array $jsApiTicket)

@@ -107,7 +107,7 @@ class MpWechat extends BaseWechat
                         $url = preg_replace_callback("/access_token=([^&]*)/i", function(){
                             return 'access_token=' . $this->getAccessToken(true);
                         }, $url);
-                        $result = $this->parseHttpResult($url, $url, $postOptions, false); // 仅重新获取一次,否则容易死循环
+                        $result = $this->parseHttpRequest($callable, $url, $postOptions, false); // 仅重新获取一次,否则容易死循环
                     }
                     break;
             }
@@ -162,15 +162,16 @@ class MpWechat extends BaseWechat
     /**
      * 请求服务器access_token
      * @param string $grantType
-     * @return array
+     * @return array|bool
      */
     protected function requestAccessToken($grantType = 'client_credential')
     {
-        return $this->httpGet(self::WECHAT_ACCESS_TOKEN_PREFIX, [
+        $result = $this->httpGet(self::WECHAT_ACCESS_TOKEN_PREFIX, [
             'appid' => $this->appId,
             'secret' => $this->appSecret,
             'grant_type' => $grantType
         ]);
+        return isset($result['access_token']) ? $result : false;
     }
 
     /**
@@ -1085,14 +1086,15 @@ class MpWechat extends BaseWechat
     /**
      * 请求服务器jsapi_ticket
      * @param string $type
-     * @return array
+     * @return array|bool
      */
     protected function requestJsApiTicket($type = 'jsapi')
     {
-        return $this->httpGet(self::WECHAT_JS_API_TICKET_PREFIX, [
+        $result = $this->httpGet(self::WECHAT_JS_API_TICKET_PREFIX, [
             'access_token' => $this->getAccessToken(),
             'type' => $type
         ]);
+        return isset($result['ticket']) ? $result : false;
     }
 
     /**
