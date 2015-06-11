@@ -787,7 +787,7 @@ class MpWechat extends BaseWechat
             'openid' => $openId,
             'lang' => $lang
         ]);
-        return array_key_exists('errcode', $result) ? $result : false;
+        return !array_key_exists('errcode', $result) ? $result : false;
     }
 
     /**

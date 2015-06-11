@@ -368,10 +368,10 @@ abstract class BaseWechat extends Component
             'postOptions' => $postOptions,
             'options' => $options
         ], __METHOD__);
-        return $this->parseHttpRequest(function() use ($url, $postOptions) {
+        return $this->parseHttpRequest(function($url, $postOptions) {
             return $this->http($url, [
                 CURLOPT_POST => true,
-                CURLOPT_POSTFIELDS => is_array($postOptions) ? json_encode($postOptions) : $postOptions
+                CURLOPT_POSTFIELDS => is_array($postOptions) ? json_encode($postOptions, JSON_UNESCAPED_UNICODE) : $postOptions
             ]);
         }, $this->httpBuildQuery($url, $options), $postOptions);
     }
