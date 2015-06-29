@@ -506,16 +506,17 @@ class MpWechat extends BaseWechat
     const WECHAT_MATERIAL_ADD_PREFIX = '/cgi-bin/material/add_material';
     /**
      * 新增其他类型永久素材
-     * @param $mediaPath
-     * @param $type
+     * @param string $mediaPath
+     * @param string $type
+     * @param array $data 视频素材需要description
      * @return bool|mixed
      * @throws \yii\web\HttpException
      */
-    public function addMaterial($mediaPath, $type)
+    public function addMaterial($mediaPath, $type, $data = [])
     {
-        $result = $this->httpPost(self::WECHAT_MATERIAL_ADD_PREFIX, [
+        $result = $this->httpPost(self::WECHAT_MATERIAL_ADD_PREFIX, array_merge($data, [
             'media' => $this->uploadFile($mediaPath)
-        ], [
+        ]), [
             'access_token' => $this->getAccessToken(),
             'type' => $type
         ]);
