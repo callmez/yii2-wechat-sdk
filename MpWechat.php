@@ -1017,7 +1017,7 @@ class MpWechat extends BaseWechat
      * @return bool|mixed
      * @throws \yii\web\HttpException
      */
-    public function createQrCode(arary $data)
+    public function createQrCode(array $data)
     {
         $result = $this->httpRaw(self::WECHAT_QR_CODE_CREATE_PREFIX, $data, [
             'access_token' => $this->getAccessToken()
