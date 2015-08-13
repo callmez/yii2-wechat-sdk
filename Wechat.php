@@ -1595,7 +1595,7 @@ class Wechat extends Component
         $result = $this->httpRaw(self::WECHAT_SHOP_PRODUCT_STOCK_REDUCE_URL . 'access_token=' . $this->getAccessToken(), [
             'product_id' => $productId,
             'quantity' => $quantity,
-            'sku_info' => $skuInfo === nulll ? $skuInfo : implode(':', $skuInfo)
+            'sku_info' => $skuInfo === null ? $skuInfo : implode(':', $skuInfo)
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'success';
     }
