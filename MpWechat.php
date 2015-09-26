@@ -411,10 +411,10 @@ class MpWechat extends BaseWechat
      */
     public function sendTemplateMessage(array $data)
     {
-        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_PREFIX, [
+        $result = $this->httpRaw(self::WECHAT_TEMPLATE_MESSAGE_SEND_PREFIX, array_merge([
             'url' => null,
             'topcolor' => '#FF0000'
-        ] + $data, [
+        ], $data), [
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['msgid']) ? $result['msgid'] : false;
@@ -614,7 +614,7 @@ class MpWechat extends BaseWechat
         ]);
         return !isset($result['errodcode']) ? $result : false;
     }
-    
+
     /* =================== 用户管理 =================== */
 
     /**
@@ -1004,7 +1004,7 @@ class MpWechat extends BaseWechat
         ]);
         return !array_key_exists('errcode', $result) ? $result : false;
     }
-    
+
     /* =================== 账号管理 =================== */
 
     /**
