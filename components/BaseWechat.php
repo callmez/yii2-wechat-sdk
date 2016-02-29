@@ -293,12 +293,11 @@ abstract class BaseWechat extends Component
     /**
      * 获取微信缓存数据
      * @param $name
-     * @param null $defaultValue
      * @return mixed
      */
-    protected function getCache($name, $defaultValue = null)
+    protected function getCache($name)
     {
-        return Yii::$app->cache->get($this->getCacheKey($name), $defaultValue);
+        return Yii::$app->cache->get($this->getCacheKey($name));
     }
 
     /**
