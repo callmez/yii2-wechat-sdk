@@ -47,6 +47,11 @@ class MpWechat extends BaseWechat
      * @var string
      */
     public $encodingAesKey;
+    /**
+     * 公众号接收到的消息
+     * @var array
+     */
+    protected $receivedMessage = [];
 
     /**
      * @inheritdoc
@@ -127,7 +132,6 @@ class MpWechat extends BaseWechat
     public function parseRequestXml($xml = null, $messageSignature = null, $timestamp = null , $nonce = null, $encryptType = null)
     {
         $xml === null && $xml = Yii::$app->request->getRawBody();
-        $return = [];
         if (!empty($xml)) {
             $messageSignature === null && isset($_GET['msg_signature']) && $messageSignature = $_GET['msg_signature'];
             $encryptType === null && isset($_GET['encrypt_type']) && $encryptType = $_GET['encrypt_type'];
@@ -139,9 +143,9 @@ class MpWechat extends BaseWechat
                     return $return;
                 }
             }
-            $return = (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
+            $this->receivedMessage = (array)simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA);
         }
-        return $return;
+        return $this->receivedMessage;
     }
 
     /**
@@ -231,6 +235,87 @@ class MpWechat extends BaseWechat
             'access_token' => $this->getAccessToken()
         ]);
         return isset($result['errmsg']) && $result['errmsg'] == 'ok';
+    }
+    
+    /**
+     * 发送文本消息
+     * @param string $content 发送内容
+     * @return string
+     */
+    public function sendText($content)
+    {
+        return "<xml><ToUserName><![CDATA[{$this->receivedMessage['FromUserName']}]]></ToUserName><FromUserName><![CDATA[{$this->receivedMessage['ToUserName']}]]></FromUserName><CreateTime>" . time() . "</CreateTime><MsgType><![CDATA[text]]></MsgType><Content><![CDATA[{$content}]]></Content></xml>";
+    }
+    
+    /**
+     * 发送图片消息
+     * @param string $mediaId 图片媒体文件id
+     * @return string
+     */
+    public function sendImage($mediaId)
+    {
+        return "<xml><ToUserName><![CDATA[{$this->receivedMessage['FromUserName']}]]></ToUserName><FromUserName><![CDATA[{$this->receivedMessage['ToUserName']}]]></FromUserName><CreateTime>" . time() . "</CreateTime><MsgType><![CDATA[image]]></MsgType><Image><MediaId><![CDATA[{$mediaId}]]></MediaId></Image></xml>";
+    }
+    
+    /**
+     * 发送语音消息
+     * @param string $mediaId 语音媒体文件id
+     * @return string
+     */
+    public function sendVoice($mediaId)
+    {
+        return "<xml><ToUserName><![CDATA[{$this->receivedMessage['FromUserName']}]]></ToUserName><FromUserName><![CDATA[{$this->receivedMessage['ToUserName']}]]></FromUserName><CreateTime>" . time() . "</CreateTime><MsgType><![CDATA[voice]]></MsgType><Voice><MediaId><![CDATA[{$mediaId}]]></MediaId></Voice></xml>";
+    }
+    
+    /**
+     * 发送视频消息
+     * @param string $mediaId 视频媒体文件id
+     * @param string $title 标题
+     * @param string $description 描述
+     * @return string
+     */
+    public function sendVideo($mediaId, $title = '', $description = '')
+    {
+        return "<xml><ToUserName><![CDATA[{$this->receivedMessage['FromUserName']}]]></ToUserName><FromUserName><![CDATA[{$this->receivedMessage['ToUserName']}]]></FromUserName><CreateTime>" . time() . "</CreateTime><MsgType><![CDATA[video]]></MsgType><Video><MediaId><![CDATA[{$mediaId}]]></MediaId><Title><![CDATA[{$title}]]></Title><Description><![CDATA[{$description}]]></Description></Video></xml>";
+    }
+    
+    /**
+     * 发送音乐消息
+     * @param string $musicUrl 音乐url
+     * @param string $hqMusicUrl 高品质音乐url(WiFi下优先使用)
+     * @param string $title 标题
+     * @param string $description 描述
+     * @param string $thumbnailMediaId 缩略图媒体文件id
+     * @return string
+     */
+    public function sendMusic($musicUrl, $hqMusicUrl = '', $title = '', $description = '', $thumbnailMediaId = '')
+    {
+        return "<xml><ToUserName><![CDATA[{$this->receivedMessage['FromUserName']}]]></ToUserName><FromUserName><![CDATA[{$this->receivedMessage['ToUserName']}]]></FromUserName><CreateTime>" . time() . "</CreateTime><MsgType><![CDATA[music]]></MsgType><Music><Title><![CDATA[{$title}]]></Title><Description><![CDATA[{$description}]]></Description><MusicUrl><![CDATA[{$musicUrl}]]></MusicUrl><HQMusicUrl><![CDATA[{$hqMusicUrl}]]></HQMusicUrl><ThumbMediaId><![CDATA[{$thumbnailMediaId}]]></ThumbMediaId></Music></xml>";
+    }
+    
+    /**
+     * 发送图文消息
+     * @param array $articles 图文消息数组
+     * @return string
+     */
+    public function sendNews(array $articles)
+    {
+        $articleCount = count($articles);
+        $xml = "<xml><ToUserName><![CDATA[{$this->receivedMessage['FromUserName']}]]></ToUserName><FromUserName><![CDATA[{$this->receivedMessage['ToUserName']}]]></FromUserName><CreateTime>" . time() . "</CreateTime><MsgType><![CDATA[news]]></MsgType><ArticleCount>{$articleCount}</ArticleCount><Articles>";
+        foreach($articles as $article){
+            $xml .= "<item><Title><![CDATA[{$article['title']}]]></Title><Description><![CDATA[{$article['description']}]]></Description><PicUrl><![CDATA[{$article['picUrl']}]]></PicUrl><Url><![CDATA[{$article['url']}]]></Url></item>";
+        }
+        $xml .= "</Articles></xml>";
+        return $xml;
+    }
+    
+    /**
+     * 发送转到客服消息
+     * @return string
+     */
+    public function sendTransferCustomerService()
+    {
+        return "<xml><ToUserName><![CDATA[{$this->receivedMessage['FromUserName']}]]></ToUserName><FromUserName><![CDATA[{$this->receivedMessage['ToUserName']}]]></FromUserName><CreateTime>" . time() . "</CreateTime><MsgType><![CDATA[transfer_customer_service]]></MsgType></xml>";
     }
 
     /**
