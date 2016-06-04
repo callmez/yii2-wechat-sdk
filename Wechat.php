@@ -42,7 +42,7 @@ class Wechat extends Component
     /**
      * 删除菜单
      */
-    const WECHAT_MENU_DELETE_URL = '/cgi-bin/menu/delete';
+    const WECHAT_MENU_DELETE_URL = '/cgi-bin/menu/delete?';
     /**
      * 发送客服消息
      */
