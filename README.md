@@ -68,7 +68,11 @@ Wechat方法使用(部分示例)
 var_dump($wechat->accessToken);
 
 //获取二维码ticket
-$qrcode = $wechat->createQrCode(123);
+$qrcode = $wechat->createQrCode([
+    'expire_seconds' => 604800,
+    'action_name' => 'QR_SCENE',
+    'action_info' => ['scene' => ['scene_id' => rand(1, 999999999)]]
+]);
 var_dump($qrcode);
 
 //获取二维码
