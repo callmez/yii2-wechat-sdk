@@ -235,6 +235,11 @@ abstract class BaseWechat extends Component
     }
 
     /**
+     * @var string the name of the elements that represent the array elements with numeric keys.
+     */
+    public $itemTag = 'item';
+
+    /**
      * @see yii\web\XmlResponseFormatter::buildXml()
      */
     protected function buildXml($element, $data)
