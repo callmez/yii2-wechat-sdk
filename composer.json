@@ -16,15 +16,11 @@
         }
     ],
     "require": {
-        "yiisoft/yii2": "*",
-        "callmez/wechat-sdk": "dev-master"
+        "yiisoft/yii2": "*"
     },
     "autoload": {
         "psr-4": {
             "callmez\\wechat\\sdk\\": ""
-        },
-        "files": [
-            "helpers.php"
-        ]
+        }
     }
 }
