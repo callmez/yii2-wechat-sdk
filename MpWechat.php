@@ -1111,13 +1111,13 @@ class MpWechat extends BaseWechat
      * @return array
      * @throws HttpException
      */
-    public function jsApiConfig(array $config = [])
+    public function jsApiConfig(array $config = [] , $url = null)
     {
         $data = [
             'jsapi_ticket' => $this->getJsApiTicket(),
             'noncestr' => Yii::$app->security->generateRandomString(16),
             'timestamp' => $_SERVER['REQUEST_TIME'],
-            'url' => explode('#', Yii::$app->request->getAbsoluteUrl())[0]
+            'url' => empty($url) ? explode('#', Yii::$app->request->getAbsoluteUrl())[0] : $url
         ];
         return array_merge([
             'debug' => YII_DEBUG,
