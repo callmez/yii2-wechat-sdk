@@ -869,7 +869,7 @@ class Wechat extends Component
         return $this->sendCustomMessage([
             'touser' => $openId,
             'msgtype' => 'image',
-            'voice' => [
+            'image' => [
                 'media_id' => $mediaId
             ]
         ]);
